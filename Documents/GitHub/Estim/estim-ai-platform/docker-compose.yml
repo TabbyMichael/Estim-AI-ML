@@ -1,0 +1,36 @@
+services:
+  # PostgreSQL Database with pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: estim-postgres
+    environment:
+      POSTGRES_USER: estim
+      POSTGRES_PASSWORD: estim
+      POSTGRES_DB: estim_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U estim"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and message queue
+  redis:
+    image: redis:7-alpine
+    container_name: estim-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
