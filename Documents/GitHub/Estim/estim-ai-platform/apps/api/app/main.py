@@ -1,0 +1,88 @@
+"""FastAPI application entrypoint.
+
+Wires core middleware + exception handlers, exposes /health,
+and provides the OpenAPI surface (Phase 2.4). Module routers
+(procurement, identity, ...) mount here in Phase 3+.
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.bootstrap import register_dependencies
+from app.core import logging as estim_logging
+from app.core.config import settings
+from app.core.middleware import register_handlers, register_middleware
+from app.modules.audit.api.routes import router as audit_router
+from app.modules.audit.middleware import register_audit_middleware
+from app.modules.cost_forecasting.api.routes import router as cost_forecasting_router
+from app.modules.document_intelligence.api.routes import router as documents_router
+from app.modules.identity.api.routes import router as identity_router
+from app.modules.inventory.api.routes import router as inventory_router
+from app.modules.maintenance.api.routes import router as maintenance_router
+from app.modules.notifications.api.routes import router as notifications_router
+from app.modules.procurement.api.routes import router as procurement_router
+from app.modules.project_risk.api.routes import router as project_risk_router
+from app.modules.reporting.api.routes import router as reporting_router
+from app.modules.visual_inspection.api.routes import router as visual_router
+
+estim_logging.setup_logging()
+
+app = FastAPI(
+    title="Estim AI Platform",
+    description="Construction intelligence platform (modular monolith).",
+    version="0.1.0",
+    openapi_tags=[
+        {"name": "platform", "description": "Platform health and status."},
+        {"name": "identity", "description": "Authentication and user management."},
+        {"name": "procurement", "description": "Procurement intelligence (Phase 4)."},
+        {"name": "cost-forecasting", "description": "Cost forecasting (Phase 5.1)."},
+        {"name": "inventory", "description": "Inventory intelligence (Phase 5.2)."},
+        {"name": "maintenance", "description": "Maintenance intelligence (Phase 5.3)."},
+        {"name": "project-risk", "description": "Project risk intelligence (Phase 5.4)."},
+        {"name": "visual-inspection",
+         "description": "Visual inspection (Phase 5.5)."},
+        {"name": "documents", "description": "Document intelligence (Phase 5.6)."},
+        {"name": "notifications", "description": "Notifications (Phase 6.1)."},
+        {"name": "reports", "description": "Reporting (Phase 6.2)."},
+        {"name": "audit", "description": "Audit logs (Phase 6.3)."},
+    ],
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+register_middleware(app)
+register_handlers(app)
+register_dependencies()
+register_audit_middleware(app)
+
+app.include_router(identity_router)
+app.include_router(procurement_router)
+app.include_router(cost_forecasting_router)
+app.include_router(inventory_router)
+app.include_router(maintenance_router)
+app.include_router(project_risk_router)
+app.include_router(visual_router)
+app.include_router(documents_router)
+app.include_router(notifications_router)
+app.include_router(reporting_router)
+app.include_router(audit_router)
+
+
+@app.get("/health", tags=["platform"])
+def health() -> dict:
+    """Liveness probe for Docker / load balancers."""
+    return {"status": "ok", "app": settings.app_name, "env": settings.environment}
+
+
+@app.get("/", tags=["platform"])
+def root() -> dict:
+    return {
+        "app": settings.app_name,
+        "docs": "/docs",
+        "health": "/health",
+    }
