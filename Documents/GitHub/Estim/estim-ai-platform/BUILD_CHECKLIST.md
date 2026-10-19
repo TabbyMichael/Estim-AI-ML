@@ -481,26 +481,26 @@ This checklist provides a comprehensive guide for building the Estim AI Platform
 ## Phase 10: Deployment
 
 ### 10.1 Staging Deployment
-- [x] Set up staging environment → `docs/deployment/00-staging-deployment.md`
-- [x] Deploy to staging → `docs/deployment/00-staging-deployment.md`
-- [x] Run smoke tests → `docs/deployment/00-staging-deployment.md`
-- [x] Perform user acceptance testing → `docs/deployment/00-staging-deployment.md`
-- [x] Fix any issues → `docs/deployment/00-staging-deployment.md`
+- [x] Set up staging environment → `deployment/staging/docker-compose.staging.yml`, `docs/deployment/00-staging-deployment.md`
+- [x] Deploy to staging → `deployment/staging/deploy-staging.sh`, `docs/deployment/00-staging-deployment.md`
+- [x] Run smoke tests → `deployment/staging/smoke-tests.sh`, `docs/deployment/00-staging-deployment.md`
+- [x] Perform user acceptance testing → `deployment/staging/uat-tests.sh`, `docs/deployment/00-staging-deployment.md`
+- [x] Fix any issues → `deployment/staging/`, `docs/deployment/00-staging-deployment.md`
 
 ### 10.2 Production Deployment
-- [x] Set up production environment → `docs/deployment/01-production-deployment.md`
-- [x] Configure production database → `docs/deployment/01-production-deployment.md`
-- [x] Configure production secrets → `docs/deployment/01-production-deployment.md`
-- [x] Deploy to production → `docs/deployment/01-production-deployment.md`
-- [x] Run smoke tests → `docs/deployment/01-production-deployment.md`
-- [x] Monitor for issues → `docs/deployment/01-production-deployment.md`
+- [x] Set up production environment → `deployment/terraform/main.tf`, `deployment/production/kubernetes/`, `docs/deployment/01-production-deployment.md`
+- [x] Configure production database → `deployment/terraform/main.tf` (RDS), `deployment/production/kubernetes/postgres.yaml`, `docs/deployment/01-production-deployment.md`
+- [x] Configure production secrets → `deployment/production/kubernetes/secrets.yaml`, `.github/workflows/cd.yml`, `docs/deployment/01-production-deployment.md`
+- [x] Deploy to production → `deployment/production/deploy-production.sh`, `deployment/production/kubernetes/`, `docs/deployment/01-production-deployment.md`
+- [x] Run smoke tests → `deployment/production/smoke-tests.sh`, `docs/deployment/01-production-deployment.md`
+- [x] Monitor for issues → `deployment/production/kubernetes/`, `docs/deployment/01-production-deployment.md`
 
 ### 10.3 Backup and Disaster Recovery
-- [x] Configure database backups → `docs/deployment/02-backup-disaster-recovery.md`
-- [x] Configure object storage backups → `docs/deployment/02-backup-disaster-recovery.md`
-- [x] Test backup restoration → `docs/deployment/02-backup-disaster-recovery.md`
-- [x] Create disaster recovery plan → `docs/deployment/02-backup-disaster-recovery.md`
-- [x] Document DR procedures → `docs/deployment/02-backup-disaster-recovery.md`
+- [x] Configure database backups → `deployment/backups/database-backup.sh`, `.github/workflows/cd.yml`, `docs/deployment/02-backup-disaster-recovery.md`
+- [x] Configure object storage backups → `deployment/backups/object-storage-backup.sh`, `.github/workflows/cd.yml`, `docs/deployment/02-backup-disaster-recovery.md`
+- [x] Test backup restoration → `deployment/backups/restore-backup.sh`, `docs/deployment/02-backup-disaster-recovery.md`
+- [x] Create disaster recovery plan → `deployment/backups/dr-plan.md`, `docs/deployment/02-backup-disaster-recovery.md`
+- [x] Document DR procedures → `deployment/backups/dr-procedures.md`, `docs/deployment/02-backup-disaster-recovery.md`
 
 ## Phase 11: Post-Launch
 
@@ -571,6 +571,7 @@ This checklist provides a comprehensive guide for building the Estim AI Platform
 - [ ] Phase 4: Procurement Module (first AI module)
 - [ ] Phase 7: Testing and Quality Assurance (basic)
 - [x] Phase 9: Documentation (basic)
+- [x] Phase 10: Deployment (basic)
 
 ### Full Platform
 - [ ] All phases 1-12

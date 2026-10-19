@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: estim-production-config
+  namespace: estim-production
+data:
+  APP_NAME: "Estim AI Platform"
+  DEBUG: "false"
+  CORS_ORIGINS: "https://app.estim.ai,https://api.estim.ai"
+  LOG_LEVEL: "INFO"
+  WORKERS: "4"

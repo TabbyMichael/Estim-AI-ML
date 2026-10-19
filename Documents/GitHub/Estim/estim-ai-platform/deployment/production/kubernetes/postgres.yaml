@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: estim-postgres
+  namespace: estim-production
+  labels:
+    app: estim-postgres
+    tier: database
+spec:
+  serviceName: estim-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: estim-postgres
+  template:
+    metadata:
+      labels:
+        app: estim-postgres
+        tier: database
+    spec:
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: estim-production-secrets
+                  key: DATABASE_USER
+                  optional: true
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: estim-production-secrets
+                  key: DATABASE_PASSWORD
+                  optional: true
+            - name: POSTGRES_DB
+              value: "estim_ai"
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1000m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "estim", "-d", "estim_ai"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "estim", "-d", "estim_ai"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: estim-postgres-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: "gp2"
+        resources:
+          requests:
+            storage: 500Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: estim-postgres
+  namespace: estim-production
+  labels:
+    app: estim-postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: estim-postgres
