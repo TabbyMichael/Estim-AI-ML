@@ -90,6 +90,8 @@ class NotificationService:
                     n.mark_sent()
                 except Exception as exc:  # noqa: BLE001 - delivery isolation
                     n.mark_failed(str(exc))
+            else:
+                n.mark_sent()
             self.notifications.save(n)
             created.append(n)
         return created

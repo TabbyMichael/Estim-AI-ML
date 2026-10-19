@@ -40,6 +40,14 @@ minio = "^7.2.0"
 # MLflow
 mlflow = "^2.11.0"
 
+# Monitoring / Observability
+prometheus-client = "^0.20.0"
+
+# Distributed Tracing (OpenTelemetry)
+opentelemetry-sdk = "^1.28.0"
+opentelemetry-exporter-jaeger = "^1.28.0"
+opentelemetry-instrumentation-fastapi = "^0.48b0"
+
 # Utilities
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
@@ -103,6 +111,7 @@ ignore = [
 
 [tool.mypy]
 python_version = "3.12"
+exclude = ["app/modules/.*/tests/", "^tests/"]
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -127,13 +136,14 @@ module = [
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "app/modules"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--strict-markers",
     "--strict-config",
+    "--import-mode=importlib",
     "--cov=.",
     "--cov-report=term-missing",
     "--cov-report=html",

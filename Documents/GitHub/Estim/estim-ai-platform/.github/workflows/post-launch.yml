@@ -1,0 +1,25 @@
+name: Post-launch checks
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  post-launch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run health checks
+        run: python3 estim-ai-platform/deployment/monitoring/health-monitor.py
+      - name: Run business metrics
+        run: python3 estim-ai-platform/deployment/monitoring/business-metrics.py
+      - name: Run ML monitor
+        run: python3 estim-ai-platform/deployment/monitoring/ml-monitor.py
+      - name: Dispatch alerts
+        run: python3 estim-ai-platform/deployment/monitoring/alert-manager.py
+      - name: Check dependencies
+        run: python3 estim-ai-platform/deployment/maintenance/dependency-updates.py

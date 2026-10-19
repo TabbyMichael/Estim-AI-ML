@@ -40,6 +40,15 @@ class AnomalyDecision(Enum):
     INVESTIGATE = "investigate"
 
 
+class AnomalyType(Enum):
+    """Classification of procurement anomalies."""
+    PRICE = "price"
+    QUANTITY = "quantity"
+    DUPLICATE = "duplicate"
+    SUPPLIER = "supplier"
+    PATTERN = "pattern"
+
+
 class RiskLevel(Enum):
     """Risk level enumeration."""
     LOW = "low"

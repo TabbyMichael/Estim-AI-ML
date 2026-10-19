@@ -1,16 +1,12 @@
 """Application configuration and environment variables."""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        case_sensitive=False,
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
     # Application
     app_name: str = "Estim AI Platform"
@@ -33,7 +29,7 @@ class Settings(BaseSettings):
     jwt_refresh_expire_days: int = 7
 
     # CORS
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Odoo Integration
     odoo_url: str = ""
@@ -66,6 +62,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: str = "json"
     log_correlation_id_enabled: bool = True
+
+    # Log aggregation (ELK)
+    logstash_host: str = ""
+    logstash_port: int = 5000
+
+    # Distributed tracing (OpenTelemetry / Jaeger)
+    jaeger_host: str = "localhost"
+    jaeger_port: int = 6831
 
     # Email
     smtp_host: str = ""

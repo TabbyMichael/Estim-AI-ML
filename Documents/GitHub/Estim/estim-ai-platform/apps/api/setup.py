@@ -9,6 +9,7 @@ setup(
         "uvicorn[standard]>=0.27.0",
         "pydantic>=2.6.0",
         "pydantic-settings>=2.1.0",
+        "email-validator>=2.0.0",
         "sqlalchemy>=2.0.25",
         "alembic>=1.13.1",
         "psycopg2-binary>=2.9.9",

@@ -1,3 +1,12 @@
+x-common-env: &common-env
+  DATABASE_URL: postgresql://estim:estim@postgres:5432/estim_ai
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  S3_ENDPOINT: http://minio:9000
+  ENVIRONMENT: development
+
 services:
   # PostgreSQL Database with pgvector
   postgres:
@@ -31,6 +40,191 @@ services:
       timeout: 5s
       retries: 5
 
+  # FastAPI backend
+  estim-api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: estim-api
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api/app:/app/app:ro
+
+  # Next.js frontend
+  estim-web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: estim-web
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - estim-api
+
+  # Celery background worker (same monolith codebase, separate process)
+  estim-worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: estim-worker
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A celery_app.celery_app worker --loglevel=info
+
+  # S3-compatible object storage
+  minio:
+    image: minio/minio:latest
+    container_name: estim-minio
+    environment:
+      MINIO_ROOT_USER: estimadmin
+      MINIO_ROOT_PASSWORD: estimadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ML experiment tracking
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.0
+    container_name: estim-mlflow
+    environment:
+      BACKEND_STORE_URI: postgresql://estim:estim@postgres:5432/estim_ai
+      ARTIFACT_ROOT: s3://estim-ai-artifacts/
+      AWS_ACCESS_KEY_ID: estimadmin
+      AWS_SECRET_ACCESS_KEY: estimadmin123
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    command: mlflow server --host 0.0.0.0 --port 5000
+
+  # Metrics collection
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: estim-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+
+  # Metrics dashboards
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: estim-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: estimadmin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./infrastructure/monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  # Log aggregation (ELK stack)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: estim-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: estim-logstash
+    ports:
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    volumes:
+      - ./infrastructure/logging/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: estim-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Distributed tracing (Jaeger)
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: estim-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "6831:6831/udp"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+
+  # Alert notifications
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: estim-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./infrastructure/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:

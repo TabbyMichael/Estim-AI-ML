@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
@@ -78,116 +80,253 @@ export default function ReportsPage() {
     },
   })
 
+  const getStatusBadge = (status: string) => {
+    const map = {
+      completed: 'badge-green',
+      pending: 'badge-amber',
+      failed: 'badge-red',
+    }
+    return map[status as keyof typeof map] || 'badge-brand'
+  }
+
   return (
-    <main style={{ padding: '2rem', maxWidth: 1100, margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-        Reports
-      </h1>
-      <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-        Phase 6.2 — Generate and schedule platform reports.
-      </p>
+    <div className="page-header">
+      <div className="animate-fade-in">
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+          Reports
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          Generate and schedule comprehensive platform reports
+        </p>
+      </div>
+    </div>
 
-      <section style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        <input value={reportType} onChange={(e) => setReportType(e.target.value)}
-          placeholder="Report type (e.g. po_spend)" style={inputStyle} />
-        <select value={format} onChange={(e) => setFormat(e.target.value)} style={inputStyle}>
-          <option value="markdown">Markdown</option>
-          <option value="json">JSON</option>
-          <option value="csv">CSV</option>
-        </select>
-        <button onClick={() => generate.mutate()} disabled={generate.isPending}
-          style={buttonStyle('#6366f1')}>
-          {generate.isPending ? 'Generating…' : 'Generate report'}
-        </button>
-      </section>
+    <div className="page-body">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-slide-up stagger">
+        <div className="stat-card" style={{ '--accent': '#6366f1' } as React.CSSProperties}>
+          <div className="stat-value">{data?.total ?? 0}</div>
+          <div className="stat-label">Reports Generated</div>
+        </div>
+        <div className="stat-card" style={{ '--accent': '#22c55e' } as React.CSSProperties}>
+          <div className="stat-value">{schedules?.length ?? 0}</div>
+          <div className="stat-label">Active Schedules</div>
+        </div>
+        <div className="stat-card" style={{ '--accent': '#f59e0b' } as React.CSSProperties}>
+          <div className="stat-value">3</div>
+          <div className="stat-label">Report Types</div>
+        </div>
+      </div>
 
-      <section style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'end' }}>
-        <input value={filterType} onChange={(e) => setFilterType(e.target.value)}
-          placeholder="Filter by report type" style={inputStyle} />
-      </section>
+      {/* Generate Report */}
+      <div className="card animate-slide-up" style={{ marginBottom: '2rem', animationDelay: '0.15s' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+          Generate New Report
+        </h3>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <input
+            value={reportType}
+            onChange={(e) => setReportType(e.target.value)}
+            placeholder="Report type (e.g. po_spend)"
+            style={{
+              flex: 1,
+              minWidth: '200px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          />
+          <select
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            style={{
+              width: '120px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          >
+            <option value="markdown">Markdown</option>
+            <option value="json">JSON</option>
+            <option value="csv">CSV</option>
+          </select>
+          <button
+            onClick={() => generate.mutate()}
+            disabled={generate.isPending}
+            className="btn btn-primary"
+            style={{ minWidth: '140px' }}
+          >
+            {generate.isPending ? 'Generating…' : 'Generate Report'}
+          </button>
+        </div>
+      </div>
 
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '1rem 0 0.5rem' }}>Reports</h2>
-      {isLoading ? <p>Loading…</p> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #f1f5f9', textAlign: 'left' }}>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>ID</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Type</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Title</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Status</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Format</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>By</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Created</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Error</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.reports ?? []).map((r) => (
-              <tr key={r.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '0.5rem', fontSize: '0.9rem', fontFamily: 'monospace' }}>{r.id.slice(0, 8)}…</td>
-                <td style={{ padding: '0.5rem' }}>{r.report_type}</td>
-                <td style={{ padding: '0.5rem' }}>{r.title}</td>
-                <td style={{ padding: '0.5rem' }}>{r.status}</td>
-                <td style={{ padding: '0.5rem' }}>{r.format}</td>
-                <td style={{ padding: '0.5rem' }}>{r.generated_by}</td>
-                <td style={{ padding: '0.5rem' }}>{r.created_at}</td>
-                <td style={{ padding: '0.5rem', color: '#ef4444', fontSize: '0.85rem' }}>{r.error ?? '—'}</td>
+      {/* Filter */}
+      <div className="card animate-slide-up" style={{ marginBottom: '2rem', animationDelay: '0.18s' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <input
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            placeholder="Filter by report type"
+            style={{
+              flex: 1,
+              minWidth: '200px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Reports Table */}
+      <div className="card animate-slide-up" style={{ marginBottom: '2rem', animationDelay: '0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Generated Reports
+          </h3>
+          <span className="badge badge-brand">{data?.total ?? 0} total</span>
+        </div>
+
+        {isLoading ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Loading reports…
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Format</th>
+                  <th>By</th>
+                  <th>Created</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.reports ?? []).map((r) => (
+                  <tr key={r.id}>
+                    <td className="mono" style={{ fontSize: '0.8rem' }}>{r.id.slice(0, 8)}…</td>
+                    <td>{r.report_type}</td>
+                    <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{r.title}</td>
+                    <td>
+                      <span className={`badge ${getStatusBadge(r.status)}`}>
+                        {r.status}
+                      </span>
+                    </td>
+                    <td style={{ textTransform: 'uppercase', fontSize: '0.8rem' }}>{r.format}</td>
+                    <td>{r.generated_by}</td>
+                    <td className="mono" style={{ fontSize: '0.8rem' }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                    <td style={{ color: r.error ? '#ef4444' : 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      {r.error ? 'Yes' : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {data && data.reports.length === 0 && (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            No reports yet. Generate one above.
+          </div>
+        )}
+      </div>
+
+      {/* Schedules */}
+      <div className="card animate-slide-up" style={{ marginBottom: '2rem', animationDelay: '0.25s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Report Schedules
+          </h3>
+          <span className="badge badge-brand">{schedules?.length ?? 0} total</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <input
+            value={reportType}
+            onChange={(e) => setReportType(e.target.value)}
+            placeholder="Schedule report type"
+            style={{
+              flex: 1,
+              minWidth: '200px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          />
+          <button
+            onClick={() => createSchedule.mutate()}
+            disabled={createSchedule.isPending}
+            className="btn btn-primary"
+            style={{ minWidth: '140px' }}
+          >
+            {createSchedule.isPending ? 'Creating…' : 'New Schedule'}
+          </button>
+          <button
+            onClick={() => tick.mutate()}
+            disabled={tick.isPending}
+            className="btn btn-ghost"
+            style={{ minWidth: '140px' }}
+          >
+            {tick.isPending ? 'Running…' : 'Run Due (Tick)'}
+          </button>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Interval</th>
+                <th>Enabled</th>
+                <th>By</th>
+                <th>Created</th>
+                <th>Next Run</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {data && data.reports.length === 0 && <p style={{ color: '#64748b' }}>No reports yet. Generate one above.</p>}
-
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '2rem 0 0.5rem' }}>Schedules</h2>
-      <section style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <input value={reportType} onChange={(e) => setReportType(e.target.value)}
-          placeholder="Schedule report type" style={inputStyle} />
-        <button onClick={() => createSchedule.mutate()} disabled={createSchedule.isPending}
-          style={buttonStyle('#22c55e')}>
-          {createSchedule.isPending ? 'Creating…' : 'New schedule'}
-        </button>
-        <button onClick={() => tick.mutate()} disabled={tick.isPending}
-          style={buttonStyle('#f59e0b')}>
-          {tick.isPending ? 'Ticking…' : 'Run due (tick)'}
-        </button>
-      </section>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #f1f5f9', textAlign: 'left' }}>
-            <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Type</th>
-            <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Interval</th>
-            <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Enabled</th>
-            <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>By</th>
-            <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Created</th>
-            <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Next run</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(schedules ?? []).map((s) => (
-            <tr key={s.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-              <td style={{ padding: '0.5rem' }}>{s.report_type}</td>
-              <td style={{ padding: '0.5rem' }}>{s.interval}</td>
-              <td style={{ padding: '0.5rem' }}>{String(s.enabled)}</td>
-              <td style={{ padding: '0.5rem' }}>{s.created_by}</td>
-              <td style={{ padding: '0.5rem' }}>{s.created_at}</td>
-              <td style={{ padding: '0.5rem' }}>{s.next_run_at ?? '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {(!schedules || schedules.length === 0) && <p style={{ color: '#64748b' }}>No schedules yet.</p>}
-    </main>
+            </thead>
+            <tbody>
+              {(schedules ?? []).map((s) => (
+                <tr key={s.id}>
+                  <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{s.report_type}</td>
+                  <td style={{ textTransform: 'capitalize' }}>{s.interval}</td>
+                  <td>
+                    <span className={`badge ${s.enabled ? 'badge-green' : 'badge-red'}`}>
+                      {s.enabled ? 'Yes' : 'No'}
+                    </span>
+                  </td>
+                  <td>{s.created_by}</td>
+                  <td className="mono" style={{ fontSize: '0.8rem' }}>{new Date(s.created_at).toLocaleDateString()}</td>
+                  <td className="mono" style={{ fontSize: '0.8rem' }}>
+                    {s.next_run_at ? new Date(s.next_run_at).toLocaleDateString() : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {(!schedules || schedules.length === 0) && (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            No schedules yet.
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
-
-const inputStyle: React.CSSProperties = {
-  padding: '0.5rem 0.8rem', borderRadius: 8, border: '1px solid #e2e8f0',
-  background: '#fff', color: '#0f172a', fontSize: '0.95rem',
-}
-
-const buttonStyle = (bg: string): React.CSSProperties => ({
-  padding: '0.5rem 1rem', borderRadius: 8, border: 'none', background: bg,
-  color: '#fff', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer',
-  opacity: 0.9,
-})

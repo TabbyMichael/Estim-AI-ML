@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
@@ -80,96 +82,177 @@ export default function AuditPage() {
   })
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 1100, margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-        Audit Log
-      </h1>
-      <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-        Phase 6.3 — Immutable audit trail of mutating platform activity.
-      </p>
+    <div className="page-header">
+      <div className="animate-fade-in">
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+          Audit Log
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          Immutable audit trail of all platform activity
+        </p>
+      </div>
+    </div>
 
-      <section style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>
-          Summary
+    <div className="page-body">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-slide-up stagger">
+        <div className="stat-card" style={{ '--accent': '#6366f1' } as React.CSSProperties}>
+          <div className="stat-value">{summary?.total_logged ?? '—'}</div>
+          <div className="stat-label">Total Logged</div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', padding: '0.75rem 1rem', border: '1px solid #e2e8f0', borderRadius: 10, background: '#fff', minWidth: 260 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Total logged</span>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{summary?.total_logged ?? '—'}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Sampled</span>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{summary?.sampled ?? '—'}</span>
-          </div>
-          <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '0.8rem', marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Total distinct</span>
-            <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{summary?.total ?? '—'}</span>
-          </div>
+        <div className="stat-card" style={{ '--accent': '#22c55e' } as React.CSSProperties}>
+          <div className="stat-value">{summary?.sampled ?? '—'}</div>
+          <div className="stat-label">Sampled</div>
         </div>
-      </section>
+        <div className="stat-card" style={{ '--accent': '#f59e0b' } as React.CSSProperties}>
+          <div className="stat-value">{summary?.total ?? '—'}</div>
+          <div className="stat-label">Distinct Events</div>
+        </div>
+      </div>
 
-      <section style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'end' }}>
-        <input value={actor} onChange={(e) => setActor(e.target.value)}
-          placeholder="Filter by actor" style={inputStyle} />
-        <input value={action} onChange={(e) => setAction(e.target.value)}
-          placeholder="Filter by action" style={inputStyle} />
-        <input value={resourceType} onChange={(e) => setResourceType(e.target.value)}
-          placeholder="Filter by resource type" style={inputStyle} />
-      </section>
+      {/* Filters */}
+      <div className="card animate-slide-up" style={{ marginBottom: '2rem', animationDelay: '0.15s' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+          Filter Logs
+        </h3>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <input
+            value={actor}
+            onChange={(e) => setActor(e.target.value)}
+            placeholder="Filter by actor"
+            style={{
+              flex: 1,
+              minWidth: '150px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          />
+          <input
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            placeholder="Filter by action"
+            style={{
+              flex: 1,
+              minWidth: '150px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          />
+          <input
+            value={resourceType}
+            onChange={(e) => setResourceType(e.target.value)}
+            placeholder="Filter by resource type"
+            style={{
+              flex: 1,
+              minWidth: '150px',
+              padding: '0.6rem 0.85rem',
+              borderRadius: 8,
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+            }}
+          />
+        </div>
+      </div>
 
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '1rem 0 0.5rem' }}>Audit logs</h2>
-      {isLoading ? <p>Loading…</p> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #f1f5f9', textAlign: 'left' }}>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Time</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Actor</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Action</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Resource</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>ID</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>Details</th>
-              <th style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.85rem' }}>IP</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.logs ?? []).map((l) => (
-              <tr key={l.id} style={{ borderTop: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '0.5rem', fontSize: '0.9rem', fontFamily: 'monospace' }}>{l.created_at}</td>
-                <td style={{ padding: '0.5rem' }}>{l.actor}</td>
-                <td style={{ padding: '0.5rem' }}>{l.action}</td>
-                <td style={{ padding: '0.5rem' }}>{l.resource_type}</td>
-                <td style={{ padding: '0.5rem' }}>{l.resource_id}</td>
-                <td style={{ padding: '0.5rem', fontSize: '0.85rem', color: '#334155' }}>{JSON.stringify(l.details ?? {})}</td>
-                <td style={{ padding: '0.5rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>{l.ip_address}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {data && data.logs.length === 0 && <p style={{ color: '#64748b' }}>No audit logs yet.</p>}
+      {/* Audit Logs Table */}
+      <div className="card animate-slide-up" style={{ marginBottom: '2rem', animationDelay: '0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Audit Logs
+          </h3>
+          <span className="badge badge-brand">{data?.total ?? 0} total</span>
+        </div>
 
-      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '2rem 0 0.5rem' }}>Actions</h2>
-      <section style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <button onClick={() => record.mutate()} disabled={record.isPending}
-          style={buttonStyle('#6366f1')}>
-          {record.isPending ? 'Recording…' : 'Record sample log'}
-        </button>
-        <button onClick={() => purge.mutate()} disabled={purge.isPending}
-          style={buttonStyle('#ef4444')}>
-          {purge.isPending ? 'Purging…' : 'Purge expired (retention=0)'}
-        </button>
-      </section>
-    </main>
+        {isLoading ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Loading logs…
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>ID</th>
+                  <th>Details</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.logs ?? []).map((l) => (
+                  <tr key={l.id}>
+                    <td className="mono" style={{ fontSize: '0.8rem' }}>{l.created_at}</td>
+                    <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{l.actor}</td>
+                    <td>{l.action}</td>
+                    <td>{l.resource_type}</td>
+                    <td className="mono" style={{ fontSize: '0.8rem' }}>{l.resource_id || '—'}</td>
+                    <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: '200px' }}>
+                      {JSON.stringify(l.details ?? {}).slice(0, 50)}
+                      {JSON.stringify(l.details ?? {}).length > 50 ? '…' : ''}
+                    </td>
+                    <td className="mono" style={{ fontSize: '0.8rem' }}>{l.ip_address}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {data && data.logs.length === 0 && (
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            No audit logs yet.
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="card animate-slide-up" style={{ animationDelay: '0.25s' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+          Administrative Actions
+        </h3>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => record.mutate()}
+            disabled={record.isPending}
+            className="btn btn-primary"
+            style={{ minWidth: '160px' }}
+          >
+            {record.isPending ? 'Recording…' : 'Record Sample Log'}
+          </button>
+          <button
+            onClick={() => purge.mutate()}
+            disabled={purge.isPending}
+            className="btn btn-ghost"
+            style={{
+              minWidth: '200px',
+              borderColor: 'rgba(239,68,68,0.3)',
+              color: '#ef4444',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(239,68,68,0.1)'
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'
+            }}
+          >
+            {purge.isPending ? 'Purging…' : 'Purge Expired (retention=0)'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
-
-const inputStyle: React.CSSProperties = {
-  padding: '0.5rem 0.8rem', borderRadius: 8, border: '1px solid #e2e8f0',
-  background: '#fff', color: '#0f172a', fontSize: '0.95rem',
-}
-
-const buttonStyle = (bg: string): React.CSSProperties => ({
-  padding: '0.5rem 1rem', borderRadius: 8, border: 'none', background: bg,
-  color: '#fff', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer',
-  opacity: 0.9,
-})
