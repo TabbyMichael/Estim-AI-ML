@@ -84,6 +84,35 @@ class UserService:
         user.assign_role(role_name)
         return self.users.save(user)
 
+    def remove_role(self, user_id: str, role_name: str) -> User:
+        user = self.users.get_by_id(user_id)
+        user.remove_role(role_name)
+        return self.users.save(user)
+
+    def admin_update(
+        self, user_id: str, full_name: str | None = None,
+        roles: list[str] | None = None, is_active: bool | None = None,
+    ) -> User:
+        user = self.users.get_by_id(user_id)
+        if full_name is not None:
+            user.full_name = full_name.strip()
+            user.updated_at = datetime.now(UTC)
+        if roles is not None:
+            user.roles = [r.strip().lower() for r in roles if r.strip()]
+            user.updated_at = datetime.now(UTC)
+        if is_active is not None:
+            if is_active:
+                user.reactivate()
+            else:
+                user.deactivate()
+        return self.users.save(user)
+
+    def list_users(
+        self, skip: int = 0, limit: int = 50, query: str | None = None,
+        is_active: bool | None = None,
+    ) -> tuple[list[User], int]:
+        return self.users.list_users(skip=skip, limit=limit, query=query, is_active=is_active)
+
     def _all_emails(self) -> list[str]:
         # Repository port has no list-all; existence checked via save guard.
         # can_register duplicate check uses empty list here; the repository
@@ -144,3 +173,19 @@ class RoleService:
 
     def list_roles(self) -> list[Role]:
         return self.roles.list_roles()
+
+    def create_role(
+        self, name: str, description: str = "", permissions: list[str] | None = None
+    ) -> Role:
+        role = Role(name=name, description=description, permissions=list(permissions or []))
+        return self.roles.save(role)
+
+    def grant(self, role_name: str, permission_code: str) -> Role:
+        role = self.roles.get_by_name(role_name)
+        role.grant(permission_code)
+        return self.roles.save(role)
+
+    def revoke(self, role_name: str, permission_code: str) -> Role:
+        role = self.roles.get_by_name(role_name)
+        role.revoke(permission_code)
+        return self.roles.save(role)

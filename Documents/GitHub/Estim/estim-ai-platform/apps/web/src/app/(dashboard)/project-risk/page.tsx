@@ -46,6 +46,7 @@ export default function ProjectRiskPage() {
   }
 
   return (
+    <>
     <div className="page-header">
       <div className="animate-fade-in">
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>
@@ -142,7 +143,7 @@ export default function ProjectRiskPage() {
                   Identified Risks
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {data.risks.map((risk, index) => (
+                  {data.risks.map((risk: { category?: string; description?: string; severity?: string }, index: number) => (
                     <div key={index} className="alert-item alert-item-medium">
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
@@ -176,5 +177,6 @@ export default function ProjectRiskPage() {
         </div>
       )}
     </div>
+    </>
   )
 }

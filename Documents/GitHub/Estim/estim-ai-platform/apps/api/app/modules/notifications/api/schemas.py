@@ -46,3 +46,19 @@ class PreferenceResponse(BaseModel):
     channel: str
     event_type: str
     enabled: bool
+
+
+class NotificationCreateRequest(BaseModel):
+    user_id: str = Field(..., min_length=1)
+    event_type: str = Field(default="default")
+    subject: str = Field(default="")
+    body: str = Field(default="")
+    context: dict = Field(default_factory=dict)
+    event_id: str = Field(default="")
+
+
+class NotificationStatsResponse(BaseModel):
+    total: int
+    unread: int
+    read: int
+    failed: int

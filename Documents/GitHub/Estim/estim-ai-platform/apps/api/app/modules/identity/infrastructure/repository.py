@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.modules.identity.domain.entities import (
@@ -60,6 +60,31 @@ class SqlAlchemyUserRepository:
     def _role_names(self, user_id: uuid.UUID) -> list[str]:
         stmt = select(UserRoleModel.role_name).where(UserRoleModel.user_id == user_id)
         return list(self.session.execute(stmt).scalars().all())
+
+    def list_users(
+        self, skip: int = 0, limit: int = 50, query: str | None = None,
+        is_active: bool | None = None,
+    ) -> tuple[list[User], int]:
+        stmt = select(UserModel)
+        count_stmt = select(func.count(UserModel.id))
+        if query:
+            like = f"%{query.strip().lower()}%"
+            stmt = stmt.where(
+                (UserModel.email.ilike(like)) | (UserModel.full_name.ilike(like))
+            )
+            count_stmt = count_stmt.where(
+                (UserModel.email.ilike(like)) | (UserModel.full_name.ilike(like))
+            )
+        if is_active is not None:
+            stmt = stmt.where(UserModel.is_active == is_active)
+            count_stmt = count_stmt.where(UserModel.is_active == is_active)
+        total = self.session.execute(count_stmt).scalar_one()
+        stmt = stmt.order_by(UserModel.created_at.desc()).offset(skip).limit(limit)
+        models = list(self.session.execute(stmt).scalars().all())
+        return (
+            [mappers.model_to_user(m, self._role_names(m.id)) for m in models],
+            total,
+        )
 
 
 class SqlAlchemyRoleRepository:

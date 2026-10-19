@@ -82,6 +82,7 @@ export default function AuditPage() {
   })
 
   return (
+    <>
     <div className="page-header">
       <div className="animate-fade-in">
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>
@@ -254,5 +255,6 @@ export default function AuditPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

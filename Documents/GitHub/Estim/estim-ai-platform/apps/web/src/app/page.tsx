@@ -115,6 +115,7 @@ export default function Home() {
   ]
 
   return (
+    <>
     <div className="page-header">
       <div className="animate-fade-in">
         <h1 className="text-gradient" style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
@@ -207,5 +208,6 @@ export default function Home() {
         ))}
       </div>
     </div>
+    </>
   )
 }

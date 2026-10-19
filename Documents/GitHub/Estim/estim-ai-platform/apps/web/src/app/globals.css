@@ -5,32 +5,8 @@
 @tailwind utilities;
 
 /* ── Design tokens ─────────────────────────────────────── */
+/* Light mode (default) */
 :root {
-  --bg-deep:       #08090f;
-  --bg-surface:    #0f1018;
-  --bg-card:       #14161f;
-  --bg-elevated:   #1a1d2e;
-  --bg-hover:      #1f2235;
-  --border:        rgba(99,102,241,0.18);
-  --border-subtle: rgba(255,255,255,0.06);
-  --text-primary:  #f1f5f9;
-  --text-secondary:#94a3b8;
-  --text-muted:    #475569;
-  --brand:         #6366f1;
-  --brand-light:   #818cf8;
-  --brand-dim:     rgba(99,102,241,0.12);
-  --orange:        #f97316;
-  --amber:         #f59e0b;
-  --green:         #22c55e;
-  --red:           #ef4444;
-  --cyan:          #06b6d4;
-  --purple:        #a855f7;
-  --pink:          #ec4899;
-  --sidebar-w:     260px;
-}
-
-/* Light mode */
-:root:not(.dark) {
   --bg-deep:       #f8fafc;
   --bg-surface:    #ffffff;
   --bg-card:       #ffffff;
@@ -44,6 +20,32 @@
   --brand:         #6366f1;
   --brand-light:   #4f46e5;
   --brand-dim:     rgba(99,102,241,0.1);
+  --orange:        #f97316;
+  --amber:         #f59e0b;
+  --green:         #22c55e;
+  --red:           #ef4444;
+  --cyan:          #06b6d4;
+  --purple:        #a855f7;
+  --pink:          #ec4899;
+  --sidebar-w:     260px;
+  --theme-transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode */
+.dark {
+  --bg-deep:       #08090f;
+  --bg-surface:    #0f1018;
+  --bg-card:       #14161f;
+  --bg-elevated:   #1a1d2e;
+  --bg-hover:      #1f2235;
+  --border:        rgba(99,102,241,0.18);
+  --border-subtle: rgba(255,255,255,0.06);
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:    #475569;
+  --brand:         #6366f1;
+  --brand-light:   #818cf8;
+  --brand-dim:     rgba(99,102,241,0.12);
 }
 
 /* ── Base reset ─────────────────────────────────────────── */
@@ -63,6 +65,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: var(--theme-transition);
 }
 
 /* ── Scrollbar styling ──────────────────────────────────── */
@@ -71,8 +74,8 @@ body {
 ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
 
-:root:not(.dark) ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.2); }
-:root:not(.dark) ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.4); }
+:root:not(.dark) ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.35); }
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.55); }
 
 /* ── Typography ─────────────────────────────────────────── */
 h1 { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; line-height: 1.2; }
@@ -103,6 +106,40 @@ h3 { font-size: 1rem; font-weight: 600; }
   flex: 1;
   min-height: 100vh;
   background: var(--bg-deep);
+}
+
+.theme-toggle-floating {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 60;
+  display: flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle-floating:hover {
+  background: var(--bg-elevated);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-floating:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.theme-toggle-floating svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* ── Cards ──────────────────────────────────────────────── */

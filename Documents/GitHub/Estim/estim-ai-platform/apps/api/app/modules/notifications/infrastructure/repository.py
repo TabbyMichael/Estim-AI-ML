@@ -72,6 +72,13 @@ class SqlAlchemyNotificationRepository:
         self.session.flush()
         return model_to_notification(merged)
 
+    def delete(self, notification_id: str) -> None:
+        m = self.session.get(NotificationModel, uuid.UUID(notification_id))
+        if m is None:
+            raise NotFoundError(f"Notification {notification_id} not found.")
+        self.session.delete(m)
+        self.session.flush()
+
     def list_for_user(
         self, user_id: str, skip: int = 0, limit: int = 50,
         status: str | None = None,

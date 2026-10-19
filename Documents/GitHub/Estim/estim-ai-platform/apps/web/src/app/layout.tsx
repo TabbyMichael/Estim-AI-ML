@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Sidebar from '@/components/Sidebar'
+import ThemeToggle from '@/components/ThemeToggle'
 import { Providers } from '@/app/providers'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ProtectedRoute>
             <div className="app-shell">
               <Sidebar />
+              <ThemeToggle />
               <main className="main-content">
                 {children}
               </main>

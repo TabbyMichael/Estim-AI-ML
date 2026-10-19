@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from '@/lib/theme-provider'
 import { useAuth } from '@/lib/auth-context'
+import NotificationCenter from '@/components/NotificationCenter'
 
 const modules = [
   {
@@ -155,6 +156,24 @@ export default function Sidebar() {
           </span>
           Profile
         </Link>
+        <Link href="/notifications" className={`nav-item${pathname === '/notifications' ? ' active' : ''}`}>
+          <span className="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </span>
+          Notifications
+        </Link>
+        {user?.roles?.some((r) => r === 'admin' || r === 'platform_admin') && (
+          <Link href="/admin/users" className={`nav-item${pathname.startsWith('/admin') ? ' active' : ''}`}>
+            <span className="nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </span>
+            Admin · Users
+          </Link>
+        )}
       </div>
 
       {/* Divider + section label */}
@@ -195,27 +214,93 @@ export default function Sidebar() {
         borderTop: '1px solid rgba(255,255,255,0.06)',
         marginTop: 'auto',
       }}>
-        {/* Theme toggle */}
+        {/* Theme toggle + notification bell */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'stretch' }}>
         <button
+          id="theme-toggle-btn"
           onClick={toggleTheme}
-          className="nav-item"
           style={{
-            width: '100%',
-            justifyContent: 'flex-start',
-            marginBottom: '0.75rem',
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0.55rem 0.85rem',
+            borderRadius: 10,
+            background: theme === 'dark'
+              ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1))'
+              : 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(249,115,22,0.08))',
+            border: theme === 'dark'
+              ? '1px solid rgba(99,102,241,0.25)'
+              : '1px solid rgba(245,158,11,0.25)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)'
+            e.currentTarget.style.boxShadow = theme === 'dark'
+              ? '0 4px 16px rgba(99,102,241,0.2)'
+              : '0 4px 16px rgba(245,158,11,0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
+          title={theme === 'dark' ? 'Switch to Light mode' : 'Switch to Dark mode'}
         >
-          {theme === 'dark' ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          )}
-          <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: theme === 'dark'
+                ? 'rgba(99,102,241,0.2)'
+                : 'rgba(245,158,11,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {theme === 'dark' ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"/>
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              )}
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{
+                fontSize: '0.78rem', fontWeight: 600,
+                color: theme === 'dark' ? '#818cf8' : '#f59e0b',
+                lineHeight: 1.2,
+              }}>
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </div>
+              <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', lineHeight: 1.2 }}>
+                {theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+              </div>
+            </div>
+          </div>
+          {/* Toggle pill */}
+          <div style={{
+            width: 38, height: 20, borderRadius: 999,
+            background: theme === 'dark' ? '#6366f1' : '#e2e8f0',
+            position: 'relative',
+            flexShrink: 0,
+            transition: 'background 0.3s ease',
+            border: theme === 'dark' ? 'none' : '1px solid #cbd5e1',
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: 2, left: theme === 'dark' ? 20 : 2,
+              width: 16, height: 16, borderRadius: '50%',
+              background: '#fff',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+              transition: 'left 0.3s ease',
+            }}/>
+          </div>
         </button>
+        <NotificationCenter />
+        </div>
 
         {/* Odoo sync status */}
         <div style={{
