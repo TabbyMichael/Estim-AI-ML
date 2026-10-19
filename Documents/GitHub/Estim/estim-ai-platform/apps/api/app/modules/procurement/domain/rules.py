@@ -4,42 +4,28 @@ Business rules for the procurement module.
 This module contains pure functions that implement business rules and policies.
 These functions have no side effects and are independent of infrastructure.
 """
-from typing import List
+
 from decimal import Decimal
 
-from modules.procurement.domain.entities import PurchaseOrder, OrderState, Anomaly, RiskLevel
+from app.modules.procurement.domain.entities import (
+    Anomaly,
+    AnomalyStatus,
+    OrderState,
+    PurchaseOrder,
+    RiskLevel,
+)
 
 
-# Purchase Order Rules
-
-
-def can_approve_order(order: PurchaseOrder, user_id: str, user_roles: List[str]) -> bool:
-    """Check if a user can approve a purchase order.
-
-    Args:
-        order: Purchase order to check
-        user_id: User ID attempting approval
-        user_roles: List of user roles
-
-    Returns:
-        True if user can approve, False otherwise
-    """
-    # Order must be in SUBMITTED state
+def can_approve_order(order: PurchaseOrder, user_roles: list[str]) -> bool:
+    """Approval authority: officer < manager < director tiers."""
     if order.state != OrderState.SUBMITTED:
         return False
-
-    # User must have procurement role
     if "procurement_officer" not in user_roles and "procurement_manager" not in user_roles:
         return False
-
-    # Orders above 1M TZS require manager approval
     if order.total_amount > Decimal("1000000") and "procurement_manager" not in user_roles:
         return False
-
-    # Orders above 10M TZS require director approval
     if order.total_amount > Decimal("10000000") and "procurement_director" not in user_roles:
         return False
-
     return True
 
 
@@ -80,7 +66,7 @@ def validate_order_amount(order: PurchaseOrder, max_amount: Decimal) -> bool:
     return order.total_amount <= max_amount
 
 
-def is_duplicate_po(po_number: str, existing_numbers: List[str]) -> bool:
+def is_duplicate_po(po_number: str, existing_numbers: list[str]) -> bool:
     """Check if PO number already exists.
 
     Args:
@@ -193,7 +179,7 @@ def calculate_fraud_probability(anomaly: Anomaly, historical_avg: float) -> floa
     return probability
 
 
-def can_review_anomaly(anomaly: Anomaly, user_id: str, user_roles: List[str]) -> bool:
+def can_review_anomaly(anomaly: Anomaly, user_id: str, user_roles: list[str]) -> bool:
     """Check if user can review an anomaly.
 
     Args:
@@ -221,7 +207,7 @@ def can_review_anomaly(anomaly: Anomaly, user_id: str, user_roles: List[str]) ->
 # Supplier Rules
 
 
-def is_new_supplier(supplier_id: str, known_suppliers: List[str]) -> bool:
+def is_new_supplier(supplier_id: str, known_suppliers: list[str]) -> bool:
     """Check if supplier is new (not in known suppliers list).
 
     Args:
@@ -234,10 +220,7 @@ def is_new_supplier(supplier_id: str, known_suppliers: List[str]) -> bool:
     return supplier_id not in known_suppliers
 
 
-def get_supplier_risk_level(
-    supplier_id: str,
-    supplier_history: dict
-) -> str:
+def get_supplier_risk_level(supplier_id: str, supplier_history: dict) -> str:
     """Determine supplier risk level based on history.
 
     Args:

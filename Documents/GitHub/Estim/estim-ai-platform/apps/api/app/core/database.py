@@ -1,16 +1,19 @@
 """Database session management and base model."""
+
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
 from app.core.config import settings
 
-# Create database engine
-# Use psycopg2 (psycopg2-binary) which is compatible with SQLAlchemy 2.x
+# psycopg2 driver (SQLAlchemy 2.x): use "postgresql+psycopg2://"
 database_url = settings.database_url.replace("postgresql://", "postgresql+psycopg2://")
 engine = create_engine(
     database_url,
     pool_size=settings.database_pool_size,
     max_overflow=settings.database_max_overflow,
-    echo=settings.debug
+    echo=settings.debug,
 )
 
 # Create session factory
@@ -20,7 +23,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     """
     FastAPI dependency for database session.
 

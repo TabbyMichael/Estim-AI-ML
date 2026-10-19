@@ -5,13 +5,15 @@ and provides the OpenAPI surface (Phase 2.4). Module routers
 (procurement, identity, ...) mount here in Phase 3+.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.bootstrap import register_dependencies
 from app.core import logging as estim_logging
 from app.core.config import settings
+from app.core.metrics import metrics_response
 from app.core.middleware import register_handlers, register_middleware
+from app.core.tracing import instrument_fastapi, setup_tracing
 from app.modules.audit.api.routes import router as audit_router
 from app.modules.audit.middleware import register_audit_middleware
 from app.modules.cost_forecasting.api.routes import router as cost_forecasting_router
@@ -26,6 +28,7 @@ from app.modules.reporting.api.routes import router as reporting_router
 from app.modules.visual_inspection.api.routes import router as visual_router
 
 estim_logging.setup_logging()
+setup_tracing(settings.app_name)
 
 app = FastAPI(
     title="Estim AI Platform",
@@ -72,11 +75,20 @@ app.include_router(notifications_router)
 app.include_router(reporting_router)
 app.include_router(audit_router)
 
+instrument_fastapi(app)
+
 
 @app.get("/health", tags=["platform"])
 def health() -> dict:
     """Liveness probe for Docker / load balancers."""
     return {"status": "ok", "app": settings.app_name, "env": settings.environment}
+
+
+@app.get("/metrics", tags=["platform"], include_in_schema=False)
+def metrics() -> Response:
+    """Prometheus metrics endpoint scraped by the Prometheus server."""
+    body, headers = metrics_response()
+    return Response(content=body, media_type=headers["Content-Type"])
 
 
 @app.get("/", tags=["platform"])

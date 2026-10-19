@@ -1,0 +1,77 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "estim-api-overview",
+    "title": "Estim API Overview",
+    "timezone": "UTC",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "type": "stat",
+        "title": "Total HTTP Requests",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(estim_http_requests_total[5m]))",
+            "legendFormat": "req/s"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 4}
+      },
+      {
+        "type": "stat",
+        "title": "Error Rate (5xx)",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(estim_http_requests_total{status_code=~\"5..\"}[5m]))",
+            "legendFormat": "errors/s"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 4}
+      },
+      {
+        "type": "graph",
+        "title": "Request Duration (p95)",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(estim_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95 {{endpoint}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 4, "w": 24, "h": 6}
+      },
+      {
+        "type": "graph",
+        "title": "Notifications Sent",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(estim_notifications_sent_total[5m])) by (channel, status)",
+            "legendFormat": "{{channel}} {{status}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 10, "w": 12, "h": 6}
+      },
+      {
+        "type": "graph",
+        "title": "Model Drift Score",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(estim_model_drift_score_bucket[1h]))",
+            "legendFormat": "p95 {{model_name}} {{model_version}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 10, "w": 12, "h": 6}
+      }
+    ],
+    "templating": {
+      "list": []
+    }
+  },
+  "overwrite": true
+}

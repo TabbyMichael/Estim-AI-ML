@@ -1,0 +1,253 @@
+name: CD - Continuous Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for API
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata for Web
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata for Worker
+        id: meta-worker
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
+  # ===========================================================================
+  # Deploy to Staging
+  # ===========================================================================
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'branch' || github.event_name == 'workflow_dispatch'
+    environment: staging
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name estim-staging
+
+      - name: Create .env.staging
+        run: |
+          cat > .env.staging << EOF
+          STAGING_DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}
+          STAGING_REDIS_PASSWORD=${{ secrets.STAGING_REDIS_PASSWORD }}
+          STAGING_MINIO_ACCESS_KEY=${{ secrets.STAGING_MINIO_ACCESS_KEY }}
+          STAGING_MINIO_SECRET_KEY=${{ secrets.STAGING_MINIO_SECRET_KEY }}
+          STAGING_SECRET_KEY=${{ secrets.STAGING_SECRET_KEY }}
+          STAGING_GRAFANA_PASSWORD=${{ secrets.STAGING_GRAFANA_PASSWORD }}
+          STAGING_ODOO_URL=${{ secrets.STAGING_ODOO_URL }}
+          STAGING_ODOO_DB=${{ secrets.STAGING_ODOO_DB }}
+          STAGING_ODOO_USERNAME=${{ secrets.STAGING_ODOO_USERNAME }}
+          STAGING_ODOO_PASSWORD=${{ secrets.STAGING_ODOO_PASSWORD }}
+          EOF
+
+      - name: Deploy to staging
+        run: |
+  # ===========================================================================
+  # Deploy to Production
+  # ===========================================================================
+  deploy-production:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name estim-production
+
+      - name: Terraform Init
+        working-directory: deployment/terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: deployment/terraform
+        env:
+          TF_VAR_db_password: ${{ secrets.PRODUCTION_DB_PASSWORD }}
+          TF_VAR_redis_password: ${{ secrets.PRODUCTION_REDIS_PASSWORD }}
+        run: terraform plan -out=production.tfplan
+
+      - name: Terraform Apply
+        working-directory: deployment/terraform
+        env:
+          TF_VAR_db_password: ${{ secrets.PRODUCTION_DB_PASSWORD }}
+          TF_VAR_redis_password: ${{ secrets.PRODUCTION_REDIS_PASSWORD }}
+        run: terraform apply production.tfplan
+
+      - name: Deploy to production
+        run: |
+          chmod +x deployment/production/deploy-production.sh
+          bash deployment/production/deploy-production.sh
+
+      - name: Notify deployment complete
+        run: |
+          echo "Production deployment completed for tag ${{ github.ref }}"
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d '{"text":":rocket: Estim AI Platform deployed to production! Tag: ${{ github.ref }}"}'
+
+  # ===========================================================================
+  # Backup and Disaster Recovery
+  # ===========================================================================
+  backup:
+    runs-on: ubuntu-latest
+    schedule:
+      - cron: '0 2 * * *'
+    workflow_dispatch:
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Run database backup
+        run: |
+          chmod +x deployment/backups/database-backup.sh
+          bash deployment/backups/database-backup.sh
+
+      - name: Run object storage backup
+        run: |
+          chmod +x deployment/backups/object-storage-backup.sh
+          bash deployment/backups/object-storage-backup.sh
+
+      - name: Verify backup integrity
+        run: |
+          echo "Backup verification complete"
+          aws s3 ls s3://${{ secrets.S3_BACKUP_BUCKET }}/database/ --region us-west-2 | tail -5
+          chmod +x deployment/staging/deploy-staging.sh
+          bash deployment/staging/deploy-staging.sh
+
+      - name: Build and push Worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: ${{ steps.meta-worker.outputs.tags }}
+          labels: ${{ steps.meta-worker.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

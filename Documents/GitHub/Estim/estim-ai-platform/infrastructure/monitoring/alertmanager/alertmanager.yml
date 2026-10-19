@@ -1,0 +1,48 @@
+global:
+  slack_api_url: "${SLACK_WEBHOOK_URL:-}"
+
+route:
+  receiver: slack-notifications
+  group_by: ["alertname", "service"]
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 3h
+
+receivers:
+  - name: slack-notifications
+    slack_configs:
+      - channel: "#estim-alerts"
+        api_url: "${SLACK_WEBHOOK_URL:-}"
+        title: |-
+          [{{ .Status }}] {{ .Alertname }} on {{ .CommonLabels.provider }}
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Alertname }}
+          *Status:* {{ .Status }}
+          *Description:* {{ .Description }}
+          *Details:*
+            {{ range .Labels.SortedPairs }}• {{ .Name }} = {{ .Value }}
+            {{ end }}
+          {{ end }}
+
+  - name: email-notifications
+    email_configs:
+      - to: "alerts@estim.ai"
+        from: "Alertmanager <alertmanager@estim.ai>"
+        smarthost: "smtp.gmail.com:587"
+        auth_username: "alerts@estim.ai"
+        auth_identity: "alerts@estim.ai"
+        auth_password: "SIMULATED_FOR_DEVELOPMENT"
+        send_resolved: true
+        headers:
+          Subject: "[Estim AI] {{ .Alertname }}"
+
+  - name: pagerduty-notifications
+    pagerduty_configs:
+      - service_key: "SIMULATED_PAGERDUTY_KEY"
+        send_resolved: true
+        description: |-
+          {{ .CommonAnnotations.description | default .CommonLabels.description }}
+
+templates:
+  - "/etc/alertmanager/templates/*.tmpl"

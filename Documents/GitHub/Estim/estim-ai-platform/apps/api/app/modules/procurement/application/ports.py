@@ -5,12 +5,13 @@ This module defines Protocol interfaces for external dependencies.
 These interfaces allow the procurement module to depend on abstractions
 rather than concrete implementations, enabling testability and modularity.
 """
-from typing import Protocol, List, Optional
-from decimal import Decimal
+
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Protocol
 
-from modules.procurement.domain.entities import PurchaseOrder, Anomaly
-
+from app.modules.procurement.domain.entities import Anomaly, PurchaseOrder
 
 # Repository Interfaces
 
@@ -55,11 +56,8 @@ class PurchaseOrderRepository(Protocol):
         ...
 
     def list_orders(
-        self,
-        skip: int = 0,
-        limit: int = 100,
-        filters: Optional[dict] = None
-    ) -> tuple[List[PurchaseOrder], int]:
+        self, skip: int = 0, limit: int = 100, filters: dict | None = None
+    ) -> tuple[list[PurchaseOrder], int]:
         """List purchase orders with pagination and filters.
 
         Args:
@@ -113,11 +111,8 @@ class AnomalyRepository(Protocol):
         ...
 
     def list_anomalies(
-        self,
-        skip: int = 0,
-        limit: int = 100,
-        status: Optional[str] = None
-    ) -> tuple[List[Anomaly], int]:
+        self, skip: int = 0, limit: int = 100, status: str | None = None
+    ) -> tuple[list[Anomaly], int]:
         """List anomalies with pagination and filters.
 
         Args:
@@ -188,7 +183,7 @@ class AuditService(Protocol):
         action: str,
         entity_type: str,
         entity_id: str,
-        details: Optional[dict] = None
+        details: dict | None = None,
     ) -> None:
         """Log an action for audit purposes.
 
@@ -222,12 +217,15 @@ class EventPublisher(Protocol):
 
 class StockLevel:
     """Value object representing stock level."""
+
     material_id: str
     project_id: str
     available_quantity: int
     last_updated: datetime
 
-    def __init__(self, material_id: str, project_id: str, available_quantity: int, last_updated: datetime):
+    def __init__(
+        self, material_id: str, project_id: str, available_quantity: int, last_updated: datetime
+    ):
         self.material_id = material_id
         self.project_id = project_id
         self.available_quantity = available_quantity
@@ -236,6 +234,7 @@ class StockLevel:
 
 class DomainEvent:
     """Base class for domain events."""
+
     event_type: str
     event_version: str
     timestamp: datetime

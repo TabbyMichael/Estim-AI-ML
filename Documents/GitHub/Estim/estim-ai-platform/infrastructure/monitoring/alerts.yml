@@ -1,0 +1,47 @@
+groups:
+  - name: estim_api_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(estim_http_requests_total{status_code=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx error rate on Estim API"
+          description: "5xx error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(estim_http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p95 latency on Estim API"
+          description: "p95 request latency is {{ $value }}s over the last 5 minutes."
+
+      - alert: APIUnreachable
+        expr: up{job="estim-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Estim API is unreachable"
+          description: "The Estim API has been down for more than 1 minute."
+
+      - alert: HighModelDrift
+        expr: histogram_quantile(0.95, rate(estim_model_drift_score_bucket[1h])) > 0.3
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "High model drift detected"
+          description: "p95 model drift score is {{ $value }} over the last hour."
+
+      - alert: HighProcurementAnomalies
+        expr: rate(estim_procurement_anomalies_detected_total[1h]) > 10
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "High procurement anomaly detection rate"
+          description: "{{ $value }} anomalies detected per hour over the last hour."
