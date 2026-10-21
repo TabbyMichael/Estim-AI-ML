@@ -1,0 +1,15 @@
+/** Typed API surface. Import domain modules from `@/lib/api`. */
+
+export * from './client'
+export * from './auth'
+export * from './admin'
+export * from './procurement'
+export * from './forecasting'
+export * from './inventory'
+export * from './maintenance'
+export * from './risk'
+export * from './inspection'
+export * from './documents'
+export * from './reports'
+export * from './notifications'
+export * from './audit'

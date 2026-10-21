@@ -1,0 +1,15 @@
+/** Barrel for demo fixtures. Import from `@/lib/demo` in pages. */
+
+export * from './seed'
+export * from './projects'
+export * from './dashboard'
+export * from './procurement'
+export * from './forecasting'
+export * from './inventory'
+export * from './maintenance'
+export * from './inspection'
+export * from './documents'
+export * from './reports'
+export * from './notifications'
+export * from './audit'
+export * from './people'
