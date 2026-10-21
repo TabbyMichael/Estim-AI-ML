@@ -21,8 +21,7 @@ def title_for(report_type: str) -> str:
     return REPORT_TITLES.get(report_type, report_type.replace("_", " ").title())
 
 
-def render(payload: dict[str, Any], fmt: ReportFormat,
-           title: str = "Report") -> str:
+def render(payload: dict[str, Any], fmt: ReportFormat, title: str = "Report") -> str:
     """Render a payload dict into the requested format."""
     if fmt == ReportFormat.JSON:
         return json.dumps(payload, indent=2, default=str)
@@ -48,8 +47,7 @@ def render(payload: dict[str, Any], fmt: ReportFormat,
         lines.append("| " + " | ".join(headers) + " |")
         lines.append("| " + " | ".join("---" for _ in headers) + " |")
         for row in rows:
-            lines.append("| " + " | ".join(str(row.get(h, ""))
-                                           for h in headers) + " |")
+            lines.append("| " + " | ".join(str(row.get(h, "")) for h in headers) + " |")
     return "\n".join(lines)
 
 
@@ -59,8 +57,7 @@ def next_run(interval: str, from_time: datetime | None = None) -> datetime:
     return base + delta
 
 
-def is_due(last_run: datetime | None, interval: str,
-           now: datetime | None = None) -> bool:
+def is_due(last_run: datetime | None, interval: str, now: datetime | None = None) -> bool:
     ref = now or datetime.now(UTC)
     if last_run is None:
         return True

@@ -34,10 +34,14 @@ class InventoryService:
 
     def record_snapshot(self, request: StockSnapshotCreate) -> StockSnapshot:
         snap = StockSnapshot(
-            id=str(uuid.uuid4()), material_id=request.material_id,
-            site_id=request.site_id, quantity_on_hand=request.quantity_on_hand,
-            unit=request.unit, recorded_at=request.recorded_at or datetime.now(UTC),
-            reorder_point=request.reorder_point, metadata=request.metadata,
+            id=str(uuid.uuid4()),
+            material_id=request.material_id,
+            site_id=request.site_id,
+            quantity_on_hand=request.quantity_on_hand,
+            unit=request.unit,
+            recorded_at=request.recorded_at or datetime.now(UTC),
+            reorder_point=request.reorder_point,
+            metadata=request.metadata,
         )
         return self.stock.save(snap)
 
@@ -47,22 +51,24 @@ class InventoryService:
     def list_snapshots(
         self, skip: int, limit: int, filters: dict | None = None
     ) -> tuple[list[StockSnapshot], int]:
-        return self.stock.list_snapshots(skip=skip, limit=limit,
-                                         filters=filters or {})
+        return self.stock.list_snapshots(skip=skip, limit=limit, filters=filters or {})
 
     def create_forecast(self, request: DemandForecastCreate) -> DemandForecast:
         if self.forecasts is None:
             raise InvalidStateError("Forecast repository not configured")
         forecast = DemandForecast(
-            id=str(uuid.uuid4()), material_id=request.material_id,
-            site_id=request.site_id, forecast_type=request.forecast_type,
+            id=str(uuid.uuid4()),
+            material_id=request.material_id,
+            site_id=request.site_id,
+            forecast_type=request.forecast_type,
             status=ForecastStatus.DRAFT,
             predicted_quantity=request.predicted_quantity,
             confidence_low=request.confidence_low,
             confidence_high=request.confidence_high,
             horizon_days=request.horizon_days,
             model_version=request.model_version,
-            created_at=datetime.now(UTC), created_by=request.created_by,
+            created_at=datetime.now(UTC),
+            created_by=request.created_by,
         )
         return self.forecasts.save(forecast)
 
@@ -72,7 +78,8 @@ class InventoryService:
         if self.forecasts is None:
             raise InvalidStateError("Forecast repository not configured")
         return self.forecasts.list_forecasts(
-            skip=skip, limit=limit,
+            skip=skip,
+            limit=limit,
             filters=filters.model_dump(exclude_none=True),
         )
 
@@ -93,7 +100,10 @@ class InventoryService:
         return self.forecasts.save(forecast)
 
     def stockout_check(
-        self, material_id: str, site_id: str, daily_demand: Decimal,
+        self,
+        material_id: str,
+        site_id: str,
+        daily_demand: Decimal,
         horizon_days: int = 14,
     ) -> dict:
         latest = self.stock.latest_for(material_id, site_id)
@@ -103,9 +113,15 @@ class InventoryService:
         at_risk = rules.is_stockout_risk(latest, daily_demand, horizon_days)
         qty = rules.reorder_quantity(latest, daily_demand, horizon_days)
         rec = ReorderRecommendation(
-            id=str(uuid.uuid4()), material_id=material_id, site_id=site_id,
+            id=str(uuid.uuid4()),
+            material_id=material_id,
+            site_id=site_id,
             recommended_quantity=qty,
             reason="below cover threshold" if at_risk else "healthy",
         )
-        return {"at_risk": at_risk, "days_of_cover": cover,
-                "reorder_quantity": str(qty), "recommendation_id": rec.id}
+        return {
+            "at_risk": at_risk,
+            "days_of_cover": cover,
+            "reorder_quantity": str(qty),
+            "recommendation_id": rec.id,
+        }

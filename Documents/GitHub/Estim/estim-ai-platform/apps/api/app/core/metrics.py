@@ -4,7 +4,7 @@ Exposes application, business, and ML metrics at the `/metrics` endpoint
 scraped by Prometheus (see `infrastructure/monitoring/prometheus.yml`).
 """
 
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 # ---------------------------------------------------------------------------
 # HTTP / application metrics

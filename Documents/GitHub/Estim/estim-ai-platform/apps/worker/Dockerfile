@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Reuse API dependencies - worker shares the monolith codebase.
 # Build context is the repo root (see docker-compose.yml), so paths
-# are relative to estim-ai-platform/.
+# are relative to the repository root.
 COPY apps/api/setup.py apps/api/pyproject.toml ./
 RUN pip install --upgrade pip && pip install -e ".[dev]"
 

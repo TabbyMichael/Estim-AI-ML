@@ -48,7 +48,7 @@ This project uses a **modular monolith architecture** with clear module boundari
 ## Project Structure
 
 ```
-estim-ai-platform/
+Estim-AI-ML/
 ├── apps/
 │   ├── api/                         # FastAPI backend
 │   │   ├── app/
@@ -105,7 +105,7 @@ estim-ai-platform/
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd estim-ai-platform
+cd Estim-AI-ML
 ```
 
 2. Copy environment template:

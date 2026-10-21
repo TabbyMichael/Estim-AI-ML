@@ -1,10 +1,13 @@
 """Tests for alert notification configuration."""
 
-import yaml
 from pathlib import Path
 
+import yaml
+
 BASE_DIR = Path(__file__).parent.parent.parent.parent
-ALERTMANAGER_CONFIG_PATH = BASE_DIR / "infrastructure" / "monitoring" / "alertmanager" / "alertmanager.yml"
+ALERTMANAGER_CONFIG_PATH = (
+    BASE_DIR / "infrastructure" / "monitoring" / "alertmanager" / "alertmanager.yml"
+)
 
 
 def load_alertmanager_config():
@@ -23,11 +26,15 @@ class TestAlertmanagerConfig:
         assert "receivers" in config
 
     def test_global_settings(self):
-        """Global config should include Slack API URL."""
+        """Global config should reference the Slack webhook via env var templating.
+
+        Alertmanager resolves `${SLACK_WEBHOOK_URL:-}` at load time, so the
+        webhook URL is never hard-coded in the repository.
+        """
         config = load_alertmanager_config()
         global_conf = config.get("global", {})
         slack_url = global_conf.get("slack_api_url", "")
-        assert "hooks.slack.com" in slack_url
+        assert "SLACK_WEBHOOK_URL" in slack_url
 
     def test_route_definition(self):
         """Route should be configured with correct group_by."""

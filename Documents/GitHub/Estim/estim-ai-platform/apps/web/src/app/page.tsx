@@ -122,7 +122,7 @@ export default function Home() {
           Welcome back, Ian
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '0.25rem' }}>
-          Here's what's happening with your construction projects today.
+          Here&apos;s what&apos;s happening with your construction projects today.
         </p>
       </div>
     </div>

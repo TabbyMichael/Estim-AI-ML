@@ -1,7 +1,6 @@
 """Pydantic schemas for visual inspection."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,9 +29,15 @@ class InspectionResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, i: Inspection) -> "InspectionResponse":
-        return cls(id=i.id, project_id=i.project_id, site_id=i.site_id,
-                   title=i.title, status=i.status.value,
-                   created_by=i.created_by, created_at=i.created_at)
+        return cls(
+            id=i.id,
+            project_id=i.project_id,
+            site_id=i.site_id,
+            title=i.title,
+            status=i.status.value,
+            created_by=i.created_by,
+            created_at=i.created_at,
+        )
 
 
 class InspectionListResponse(BaseModel):
@@ -59,16 +64,21 @@ class ImageResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, img: ImageAsset) -> "ImageResponse":
-        return cls(id=img.id, inspection_id=img.inspection_id,
-                   storage_key=img.storage_key, filename=img.filename,
-                   content_type=img.content_type, size_bytes=img.size_bytes)
+        return cls(
+            id=img.id,
+            inspection_id=img.inspection_id,
+            storage_key=img.storage_key,
+            filename=img.filename,
+            content_type=img.content_type,
+            size_bytes=img.size_bytes,
+        )
 
 
 class DetectionCreate(BaseModel):
     image_id: str = Field(..., min_length=1)
     defect_type: str = Field(..., min_length=1)
     confidence: float = Field(..., ge=0, le=1)
-    bbox: Optional[dict] = None
+    bbox: dict | None = None
 
 
 class DetectionResponse(BaseModel):
@@ -81,6 +91,11 @@ class DetectionResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, d: DefectDetection) -> "DetectionResponse":
-        return cls(id=d.id, image_id=d.image_id,
-                   inspection_id=d.inspection_id, defect_type=d.defect_type,
-                   confidence=d.confidence, severity=d.severity.value)
+        return cls(
+            id=d.id,
+            image_id=d.image_id,
+            inspection_id=d.inspection_id,
+            defect_type=d.defect_type,
+            confidence=d.confidence,
+            severity=d.severity.value,
+        )

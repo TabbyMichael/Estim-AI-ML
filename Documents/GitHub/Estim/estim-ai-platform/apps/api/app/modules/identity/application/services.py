@@ -90,8 +90,11 @@ class UserService:
         return self.users.save(user)
 
     def admin_update(
-        self, user_id: str, full_name: str | None = None,
-        roles: list[str] | None = None, is_active: bool | None = None,
+        self,
+        user_id: str,
+        full_name: str | None = None,
+        roles: list[str] | None = None,
+        is_active: bool | None = None,
     ) -> User:
         user = self.users.get_by_id(user_id)
         if full_name is not None:
@@ -108,7 +111,10 @@ class UserService:
         return self.users.save(user)
 
     def list_users(
-        self, skip: int = 0, limit: int = 50, query: str | None = None,
+        self,
+        skip: int = 0,
+        limit: int = 50,
+        query: str | None = None,
         is_active: bool | None = None,
     ) -> tuple[list[User], int]:
         return self.users.list_users(skip=skip, limit=limit, query=query, is_active=is_active)

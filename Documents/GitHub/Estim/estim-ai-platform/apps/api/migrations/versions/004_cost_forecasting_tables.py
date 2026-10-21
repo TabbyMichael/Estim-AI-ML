@@ -22,12 +22,8 @@ def upgrade() -> None:
         sa.Column("forecast_type", sa.String(50), nullable=False),
         sa.Column("status", sa.String(30), nullable=False),
         sa.Column("predicted_amount", sa.Numeric(18, 2), nullable=False),
-        sa.Column(
-            "confidence_interval_low", sa.Numeric(18, 2), nullable=False
-        ),
-        sa.Column(
-            "confidence_interval_high", sa.Numeric(18, 2), nullable=False
-        ),
+        sa.Column("confidence_interval_low", sa.Numeric(18, 2), nullable=False),
+        sa.Column("confidence_interval_high", sa.Numeric(18, 2), nullable=False),
         sa.Column("model_version", sa.String(50), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True)),
         sa.Column("created_by", sa.String(100), nullable=False),

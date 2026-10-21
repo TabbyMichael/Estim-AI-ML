@@ -19,11 +19,17 @@ def _tz(v: datetime | None) -> datetime | None:
 
 def log_to_model(log: AuditLog) -> AuditLogModel:
     return AuditLogModel(
-        id=uuid.UUID(log.id), actor=log.actor, action=log.action,
-        resource_type=log.resource_type, resource_id=log.resource_id,
-        details=json.dumps(log.details, default=str), ip_address=log.ip_address,
-        user_agent=log.user_agent, correlation_id=log.correlation_id,
-        created_at=log.created_at)
+        id=uuid.UUID(log.id),
+        actor=log.actor,
+        action=log.action,
+        resource_type=log.resource_type,
+        resource_id=log.resource_id,
+        details=json.dumps(log.details, default=str),
+        ip_address=log.ip_address,
+        user_agent=log.user_agent,
+        correlation_id=log.correlation_id,
+        created_at=log.created_at,
+    )
 
 
 def model_to_log(m: AuditLogModel) -> AuditLog:
@@ -32,10 +38,17 @@ def model_to_log(m: AuditLogModel) -> AuditLog:
     raw = m.details
     details: dict = json.loads(raw) if isinstance(raw, str) else (raw or {})
     return AuditLog(
-        id=str(m.id), actor=m.actor, action=m.action,
-        resource_type=m.resource_type, resource_id=m.resource_id,
-        details=details, ip_address=m.ip_address, user_agent=m.user_agent,
-        correlation_id=m.correlation_id, created_at=created)
+        id=str(m.id),
+        actor=m.actor,
+        action=m.action,
+        resource_type=m.resource_type,
+        resource_id=m.resource_id,
+        details=details,
+        ip_address=m.ip_address,
+        user_agent=m.user_agent,
+        correlation_id=m.correlation_id,
+        created_at=created,
+    )
 
 
 class SqlAlchemyAuditRepository:
@@ -65,14 +78,11 @@ class SqlAlchemyAuditRepository:
     def purge_before(self, cutoff: datetime) -> int:
         """Delete logs older than cutoff; returns rows deleted."""
         count = self.session.execute(
-            select(func.count(AuditLogModel.id)).where(
-                AuditLogModel.created_at < cutoff)
+            select(func.count(AuditLogModel.id)).where(AuditLogModel.created_at < cutoff)
         ).scalar_one()
-        self.session.execute(
-            delete(AuditLogModel).where(AuditLogModel.created_at < cutoff))
+        self.session.execute(delete(AuditLogModel).where(AuditLogModel.created_at < cutoff))
         self.session.flush()
         return int(count)
 
     def count_all(self) -> int:
-        return int(self.session.execute(
-            select(func.count(AuditLogModel.id))).scalar_one())
+        return int(self.session.execute(select(func.count(AuditLogModel.id))).scalar_one())

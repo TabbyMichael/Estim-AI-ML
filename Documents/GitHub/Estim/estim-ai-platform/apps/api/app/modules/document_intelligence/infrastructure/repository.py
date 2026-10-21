@@ -62,9 +62,11 @@ class SqlAlchemyChunkRepository:
         return out
 
     def list_for_document(self, document_id: str) -> list[DocumentChunk]:
-        stmt = (select(DocumentChunkModel)
-                .where(DocumentChunkModel.document_id == document_id)
-                .order_by(DocumentChunkModel.chunk_index))
+        stmt = (
+            select(DocumentChunkModel)
+            .where(DocumentChunkModel.document_id == document_id)
+            .order_by(DocumentChunkModel.chunk_index)
+        )
         rows = self.session.execute(stmt).scalars().all()
         return [mappers.model_to_chunk(r) for r in rows]
 
@@ -82,8 +84,7 @@ class SqlAlchemyEmbeddingRepository:
         return out
 
     def list_for_document(self, document_id: str) -> list[Embedding]:
-        stmt = select(EmbeddingModel).where(
-            EmbeddingModel.document_id == document_id)
+        stmt = select(EmbeddingModel).where(EmbeddingModel.document_id == document_id)
         rows = self.session.execute(stmt).scalars().all()
         return [mappers.model_to_embedding(r) for r in rows]
 

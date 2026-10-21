@@ -43,8 +43,7 @@ app = FastAPI(
         {"name": "inventory", "description": "Inventory intelligence (Phase 5.2)."},
         {"name": "maintenance", "description": "Maintenance intelligence (Phase 5.3)."},
         {"name": "project-risk", "description": "Project risk intelligence (Phase 5.4)."},
-        {"name": "visual-inspection",
-         "description": "Visual inspection (Phase 5.5)."},
+        {"name": "visual-inspection", "description": "Visual inspection (Phase 5.5)."},
         {"name": "documents", "description": "Document intelligence (Phase 5.6)."},
         {"name": "notifications", "description": "Notifications (Phase 6.1)."},
         {"name": "reports", "description": "Reporting (Phase 6.2)."},
@@ -69,6 +68,7 @@ register_audit_middleware(app)
 async def _capture_event_loop() -> None:
     """Record the main loop so sync code can publish realtime frames."""
     realtime.capture_loop()
+
 
 app.include_router(identity_router)
 app.include_router(procurement_router)

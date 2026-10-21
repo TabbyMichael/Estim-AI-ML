@@ -258,6 +258,96 @@ h3 { font-size: 1rem; font-weight: 600; }
   text-align: left;
   padding: 0.65rem 1rem;
   font-size: 0.72rem;
+/* ── Inputs ─────────────────────────────────────────────── */
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+/* ── Date range picker ──────────────────────────────────── */
+
+.date-range-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-range-picker .row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.date-range-picker .row > span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Pagination ─────────────────────────────────────────── */
+
+.pagination {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.pagination button {
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pagination .page-info {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-right: 0.5rem;
+}
+
+/* ── JSON / code viewer ─────────────────────────────────── */
+
+.code-viewer {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.code-viewer pre {
+  margin: 0;
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;

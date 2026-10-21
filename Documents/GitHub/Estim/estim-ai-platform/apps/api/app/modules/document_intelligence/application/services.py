@@ -30,14 +30,23 @@ class DocumentService:
         self.embeddings = embeddings
 
     def upload(
-        self, project_id: str, filename: str, storage_key: str,
-        content_type: str = "application/pdf", created_by: str = "",
+        self,
+        project_id: str,
+        filename: str,
+        storage_key: str,
+        content_type: str = "application/pdf",
+        created_by: str = "",
     ) -> Document:
-        doc = Document(id=str(uuid.uuid4()), project_id=project_id,
-                       filename=filename, storage_key=storage_key,
-                       content_type=content_type,
-                       status=DocumentStatus.UPLOADED, created_by=created_by,
-                       created_at=datetime.now(UTC))
+        doc = Document(
+            id=str(uuid.uuid4()),
+            project_id=project_id,
+            filename=filename,
+            storage_key=storage_key,
+            content_type=content_type,
+            status=DocumentStatus.UPLOADED,
+            created_by=created_by,
+            created_at=datetime.now(UTC),
+        )
         return self.documents.save(doc)
 
     def list_documents(
@@ -60,9 +69,15 @@ class DocumentService:
         saved = self.chunks.save_all(built)
         count = len(saved)
         if self.embeddings is not None and embed_fn is not None:
-            embs = [Embedding(id=str(uuid.uuid4()), chunk_id=c.id,
-                              document_id=document_id,
-                              vector=embed_fn(c.text)) for c in saved]
+            embs = [
+                Embedding(
+                    id=str(uuid.uuid4()),
+                    chunk_id=c.id,
+                    document_id=document_id,
+                    vector=embed_fn(c.text),
+                )
+                for c in saved
+            ]
             self.embeddings.save_all(embs)
         doc.mark_indexed()
         self.documents.save(doc)
@@ -85,9 +100,9 @@ class RAGService:
         hits = self.embeddings.search_brute_force(qvec, limit)
         results: list[dict[str, Any]] = []
         for emb, score in hits:
-            results.append({"chunk_id": emb.chunk_id,
-                            "document_id": emb.document_id,
-                            "score": round(score, 4)})
+            results.append(
+                {"chunk_id": emb.chunk_id, "document_id": emb.document_id, "score": round(score, 4)}
+            )
         # Attach chunk text lazily per document.
         for r in results:
             for c in self.chunks.list_for_document(r["document_id"]):
@@ -99,6 +114,8 @@ class RAGService:
     def answer(self, query: str, limit: int = 3) -> dict:
         hits = self.search(query, limit)
         context = "\n---\n".join(h.get("text", "") for h in hits)
-        draft = (f"Based on {len(hits)} retrieved passage(s), "
-                 f"here is what the corpus says about '{query}':\n{context[:1500]}")
+        draft = (
+            f"Based on {len(hits)} retrieved passage(s), "
+            f"here is what the corpus says about '{query}':\n{context[:1500]}"
+        )
         return {"query": query, "answer": draft, "sources": hits}

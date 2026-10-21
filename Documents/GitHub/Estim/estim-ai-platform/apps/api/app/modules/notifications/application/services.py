@@ -9,8 +9,10 @@ import logging
 import smtplib
 import uuid
 from collections import deque
+from collections.abc import Callable
 from datetime import UTC, datetime
 from email.message import EmailMessage
+from typing import Any
 
 from app.core.config import settings
 from app.modules.notifications.application.ports import (
@@ -66,7 +68,9 @@ class NotificationTrigger:
 
     @classmethod
     def register(
-        cls, event_type: str, channels: tuple[str, ...] = ("in_app", "email"),
+        cls,
+        event_type: str,
+        channels: tuple[str, ...] = ("in_app", "email"),
         description: str = "",
     ) -> None:
         cls._triggers[event_type] = {"channels": channels, "description": description}
@@ -129,7 +133,10 @@ class NotificationService:
         self.email = email or EmailChannel()
 
     def list_for_user(
-        self, user_id: str, skip: int = 0, limit: int = 50,
+        self,
+        user_id: str,
+        skip: int = 0,
+        limit: int = 50,
         status: str | None = None,
     ) -> tuple[list[Notification], int]:
         return self.notifications.list_for_user(user_id, skip, limit, status)
@@ -161,13 +168,15 @@ class NotificationService:
         return {"total": total, "unread": unread, "read": read, "failed": failed}
 
     def notify(
-        self, user_id: str, event_type: str, context: dict,
+        self,
+        user_id: str,
+        event_type: str,
+        context: dict,
         channels: tuple[Channel, ...] = (Channel.IN_APP, Channel.EMAIL),
         event_id: str = "",
     ) -> list[Notification]:
         """Render + dispatch a notification on the allowed channels."""
-        prefs = (self.preferences.list_for_user(user_id)
-                 if self.preferences else [])
+        prefs = self.preferences.list_for_user(user_id) if self.preferences else []
         key = rules.template_for_event(event_type)
         subject, body = rules.render(key, context)
         # Trigger registry can narrow channels per event type (Roadmap 1.3)
@@ -179,9 +188,15 @@ class NotificationService:
             if not rules.allows(prefs, user_id, channel, event_type):
                 continue
             n = Notification(
-                id=str(uuid.uuid4()), user_id=user_id, channel=channel,
-                subject=subject, body=body, template_key=key,
-                event_type=event_type, event_id=event_id)
+                id=str(uuid.uuid4()),
+                user_id=user_id,
+                channel=channel,
+                subject=subject,
+                body=body,
+                template_key=key,
+                event_type=event_type,
+                event_id=event_id,
+            )
             if channel == Channel.EMAIL:
                 try:
                     self.email.send(user_id, subject, body)
@@ -197,15 +212,20 @@ class NotificationService:
                 try:
                     from app.core import realtime
 
-                    realtime.publish(user_id, {
-                        "type": "event",
-                        "event": "notification.created",
-                        "data": {
-                            "id": n.id, "subject": n.subject, "body": n.body,
-                            "event_type": n.event_type, "created_at":
-                            n.created_at.isoformat(),
+                    realtime.publish(
+                        user_id,
+                        {
+                            "type": "event",
+                            "event": "notification.created",
+                            "data": {
+                                "id": n.id,
+                                "subject": n.subject,
+                                "body": n.body,
+                                "event_type": n.event_type,
+                                "created_at": n.created_at.isoformat(),
+                            },
                         },
-                    })
+                    )
                 except Exception:  # noqa: BLE001 - push must never break dispatch
                     pass
             created.append(n)
@@ -220,8 +240,9 @@ class EventNotificationBridge:
     """
 
     def __init__(
-        self, service: NotificationService,
-        user_resolver=None,  # type: ignore[no-untyped-def]
+        self,
+        service: NotificationService,
+        user_resolver: Callable[[str, dict[str, Any]], list[str] | None] | None = None,
         default_users: tuple[str, ...] = (),
     ) -> None:
         self.service = service
@@ -230,24 +251,24 @@ class EventNotificationBridge:
 
     def handle(self, payload: dict) -> None:
         event_type = str(payload.get("event_type", ""))
-        users = (self.user_resolver(event_type, payload)
-                 if self.user_resolver else None)
+        users = self.user_resolver(event_type, payload) if self.user_resolver else None
         if not users:
             users = list(self.default_users)
         for user_id in users:
             self.service.notify(
-                user_id=user_id, event_type=event_type,
+                user_id=user_id,
+                event_type=event_type,
                 context=dict(payload),
-                event_id=str(payload.get("event_id", "")))
+                event_id=str(payload.get("event_id", "")),
+            )
 
-    def subscribe(self, bus, event_types: list[str]) -> None:  # type: ignore[no-untyped-def]
+    def subscribe(self, bus: Any, event_types: list[str]) -> None:
         for et in event_types:
-            bus.subscribe(et, self)  # type: ignore[arg-type]
+            bus.subscribe(et, self)
 
 
-def bridge_for(bus, service: NotificationService) -> EventNotificationBridge:  # type: ignore[no-untyped-def]
+def bridge_for(bus: Any, service: NotificationService) -> EventNotificationBridge:
     """Wire the bridge onto an event bus for all known event types."""
     bridge = EventNotificationBridge(service)
     bridge.subscribe(bus, list(rules.EVENT_TEMPLATES))
     return bridge
-

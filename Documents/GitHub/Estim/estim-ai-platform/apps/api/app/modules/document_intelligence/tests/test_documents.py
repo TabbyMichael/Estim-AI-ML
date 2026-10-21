@@ -30,8 +30,9 @@ class TestDomain:
         assert rules.chunk_text("") == []
 
     def test_lifecycle(self) -> None:
-        doc = Document(id=str(uuid4()), project_id="P", filename="a.pdf",
-                       storage_key="s3://b/a.pdf")
+        doc = Document(
+            id=str(uuid4()), project_id="P", filename="a.pdf", storage_key="s3://b/a.pdf"
+        )
         assert rules.can_index(doc) is True
         doc.mark_indexed()
         assert rules.can_index(doc) is False
@@ -42,8 +43,8 @@ class TestApplication:
         docs = Mock()
         docs.save.side_effect = lambda d: d
         docs.get_by_id.return_value = Document(
-            id=str(uuid4()), project_id="P", filename="a.pdf",
-            storage_key="s3://b/a.pdf")
+            id=str(uuid4()), project_id="P", filename="a.pdf", storage_key="s3://b/a.pdf"
+        )
         chunks = Mock()
         chunks.save_all.side_effect = lambda c: c
         svc = DocumentService(documents=docs, chunks=chunks)
@@ -85,15 +86,15 @@ def client() -> TestClient:
         EmbeddingModel as EmbModel,
     )
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
         dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
-    for table in (DocumentModel.__table__, DocumentChunkModel.__table__,
-                  EmbModel.__table__):
+    for table in (DocumentModel.__table__, DocumentChunkModel.__table__, EmbModel.__table__):
         table.schema = None
         table.create(bind=engine, checkfirst=True)
 
@@ -109,14 +110,16 @@ def client() -> TestClient:
 
 class TestApi:
     def test_upload_index_search_ask(self, client: TestClient) -> None:
-        up = client.post("/documents/upload", json={
-            "project_id": "P-9", "filename": "spec.pdf",
-            "storage_key": "s3://b/spec.pdf"})
+        up = client.post(
+            "/documents/upload",
+            json={"project_id": "P-9", "filename": "spec.pdf", "storage_key": "s3://b/spec.pdf"},
+        )
         if up.status_code != 201:
             pytest.skip(f"router not mounted yet: {up.text}")
         did = up.json()["id"]
-        idx = client.post(f"/documents/{did}/index", json={
-            "text": "concrete grade C30 foundation slab " * 60})
+        idx = client.post(
+            f"/documents/{did}/index", json={"text": "concrete grade C30 foundation slab " * 60}
+        )
         assert idx.status_code == 200, idx.text
         search = client.post("/documents/search", json={"query": "concrete"})
         assert search.status_code == 200

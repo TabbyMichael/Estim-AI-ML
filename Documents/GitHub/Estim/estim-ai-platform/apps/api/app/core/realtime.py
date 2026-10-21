@@ -54,21 +54,22 @@ class ConnectionManager:
     def connection_count(self) -> int:
         return len(self._connections)
 
-    async def connect(
-        self, websocket: WebSocket, user_id: str, connection_id: str
-    ) -> None:
+    async def connect(self, websocket: WebSocket, user_id: str, connection_id: str) -> None:
         await websocket.accept()
         async with self._lock:
             self._connections[connection_id] = websocket
             # Personal room: every user listens on user:{id}
             self._rooms[f"user:{user_id}"].add(connection_id)
             self._user_rooms[user_id].add(connection_id)
-        await self.send_to(connection_id, {
-            "type": MSG_CONNECTED,
-            "connection_id": connection_id,
-            "user_id": user_id,
-            "server_time": datetime.now(UTC).isoformat(),
-        })
+        await self.send_to(
+            connection_id,
+            {
+                "type": MSG_CONNECTED,
+                "connection_id": connection_id,
+                "user_id": user_id,
+                "server_time": datetime.now(UTC).isoformat(),
+            },
+        )
         logger.info("ws connected user=%s conn=%s", user_id, connection_id)
 
     async def disconnect(self, connection_id: str) -> None:
@@ -99,15 +100,11 @@ class ConnectionManager:
             await self.disconnect(connection_id)
             return False
 
-    async def broadcast(
-        self, payload: dict[str, Any], channel: str | None = None
-    ) -> int:
+    async def broadcast(self, payload: dict[str, Any], channel: str | None = None) -> int:
         """Fan a payload to a channel (or all connections when channel=None)."""
         async with self._lock:
             targets = (
-                set(self._connections)
-                if channel is None
-                else set(self._rooms.get(channel, set()))
+                set(self._connections) if channel is None else set(self._rooms.get(channel, set()))
             )
         delivered = 0
         for connection_id in list(targets):
@@ -144,9 +141,7 @@ def publish(user_id: str, payload: dict[str, Any]) -> bool:
     loop = _main_loop
     if loop is None or loop.is_closed():
         return False
-    loop.call_soon_threadsafe(
-        lambda: asyncio.ensure_future(manager.notify_user(user_id, payload))
-    )
+    loop.call_soon_threadsafe(lambda: asyncio.ensure_future(manager.notify_user(user_id, payload)))
     return True
 
 
@@ -170,9 +165,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str | None = None) -> 
                 channel = str(data.get("channel", "")).strip()
                 if channel:
                     await manager.subscribe(connection_id, channel)
-                    await manager.send_to(
-                        connection_id, {"type": "subscribed", "channel": channel}
-                    )
+                    await manager.send_to(connection_id, {"type": "subscribed", "channel": channel})
             elif msg_type == MSG_UNSUBSCRIBE:
                 channel = str(data.get("channel", "")).strip()
                 if channel:

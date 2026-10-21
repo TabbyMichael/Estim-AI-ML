@@ -1,5 +1,4 @@
 """Tests for application configuration."""
-import pytest
 
 from app.core.config import settings
 
@@ -41,7 +40,7 @@ class TestSettings:
         test_settings = Settings(
             app_name="Test App",
             debug=True,
-            database_url="postgresql://test:test@localhost:5432/test"
+            database_url="postgresql://test:test@localhost:5432/test",
         )
 
         assert test_settings.app_name == "Test App"

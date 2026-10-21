@@ -59,8 +59,7 @@ class SqlAlchemyImageRepository:
         return mappers.model_to_image(merged)
 
     def list_for_inspection(self, inspection_id: str) -> list[ImageAsset]:
-        stmt = select(ImageAssetModel).where(
-            ImageAssetModel.inspection_id == inspection_id)
+        stmt = select(ImageAssetModel).where(ImageAssetModel.inspection_id == inspection_id)
         rows = self.session.execute(stmt).scalars().all()
         return [mappers.model_to_image(r) for r in rows]
 
@@ -76,6 +75,7 @@ class SqlAlchemyDetectionRepository:
 
     def list_for_inspection(self, inspection_id: str) -> list[DefectDetection]:
         stmt = select(DefectDetectionModel).where(
-            DefectDetectionModel.inspection_id == inspection_id)
+            DefectDetectionModel.inspection_id == inspection_id
+        )
         rows = self.session.execute(stmt).scalars().all()
         return [mappers.model_to_detection(r) for r in rows]

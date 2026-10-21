@@ -22,15 +22,15 @@ def _audit_service(db: Session = Depends(get_db)) -> AuditService:
     return AuditService(repository=SqlAlchemyAuditRepository(db))
 
 
-@router.post("/record", response_model=AuditLogResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post("/record", response_model=AuditLogResponse, status_code=status.HTTP_201_CREATED)
 def record(
     body: AuditRecordRequest,
     svc: AuditService = Depends(_audit_service),
     db: Session = Depends(get_db),
 ) -> AuditLogResponse:
     log = svc.record(
-        actor=body.actor, action=body.action,
+        actor=body.actor,
+        action=body.action,
         resource_type=body.resource_type or "",
         resource_id=body.resource_id or "",
         details=body.details,
@@ -58,7 +58,9 @@ def list_logs(
     logs, total = svc.list_logs(skip, limit, filters or None)
     return AuditLogListResponse(
         logs=[AuditLogResponse.from_entity(log) for log in logs],
-        total=total, skip=skip, limit=limit,
+        total=total,
+        skip=skip,
+        limit=limit,
     )
 
 

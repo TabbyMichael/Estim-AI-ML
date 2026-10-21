@@ -65,7 +65,7 @@ class PurchaseOrderCreate(BaseModel):
     supplier_id: str = Field(..., description="Supplier identifier", min_length=1)
     project_id: str = Field(..., description="Project identifier", min_length=1)
     line_items: list[PurchaseOrderLineCreate] = Field(
-        ..., description="Line items", min_items=1, max_items=100
+        ..., description="Line items", min_length=1, max_length=100
     )
 
     @validator("po_number")
@@ -89,7 +89,7 @@ class PurchaseOrderUpdate(BaseModel):
 
     supplier_id: str | None = Field(None, min_length=1)
     project_id: str | None = Field(None, min_length=1)
-    line_items: list[PurchaseOrderLineUpdate] | None = Field(None, max_items=100)
+    line_items: list[PurchaseOrderLineUpdate] | None = Field(None, max_length=100)
     state: OrderStateEnum | None = Field(None, description="New order state")
 
 
@@ -223,7 +223,7 @@ class AnomalyResponse(BaseModel):
             po_number=anomaly.po_number,
             anomaly_type=anomaly.anomaly_type,
             anomaly_score=anomaly.anomaly_score,
-            risk_level=anomaly.risk_level,
+            risk_level=anomaly.risk_level.value,
             status=AnomalyStatusEnum(anomaly.status.value),
             details=anomaly.details,
             created_at=anomaly.created_at,

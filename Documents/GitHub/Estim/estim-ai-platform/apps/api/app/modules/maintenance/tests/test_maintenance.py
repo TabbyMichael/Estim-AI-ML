@@ -27,8 +27,7 @@ from app.modules.maintenance.ml.prediction import (
 
 
 def _eq() -> Equipment:
-    return Equipment(id=str(uuid4()), name="Crane-1", equipment_type="crane",
-                     operating_hours=600.0)
+    return Equipment(id=str(uuid4()), name="Crane-1", equipment_type="crane", operating_hours=600.0)
 
 
 class TestDomain:
@@ -38,14 +37,18 @@ class TestDomain:
 
     def test_needs_maintenance(self) -> None:
         assert rules.needs_maintenance(_eq()) is True
-        fresh = Equipment(id=str(uuid4()), name="X", equipment_type="t",
-                          operating_hours=10.0)
+        fresh = Equipment(id=str(uuid4()), name="X", equipment_type="t", operating_hours=10.0)
         assert rules.needs_maintenance(fresh) is False
 
     def test_mtbf(self) -> None:
-        recs = [MaintenanceRecord(id=str(uuid4()), equipment_id="e",
-                                  maintenance_type=MaintenanceType.CORRECTIVE,
-                                  downtime_hours=5.0)]
+        recs = [
+            MaintenanceRecord(
+                id=str(uuid4()),
+                equipment_id="e",
+                maintenance_type=MaintenanceType.CORRECTIVE,
+                downtime_hours=5.0,
+            )
+        ]
         assert rules.mtbf_hours(recs, 100.0) == 100.0
         assert rules.mtbf_hours([], 100.0) == 100.0
 
@@ -59,8 +62,7 @@ class TestApplication:
         rec_repo.list_for_equipment.return_value = []
         pred_repo = Mock()
         pred_repo.latest_for.return_value = None
-        svc = MaintenanceService(equipment=eq_repo, records=rec_repo,
-                                 predictions=pred_repo)
+        svc = MaintenanceService(equipment=eq_repo, records=rec_repo, predictions=pred_repo)
         eq = svc.register_equipment("Crane-1", "crane")
         assert eq.name == "Crane-1"
         report = svc.health_report("eid")
@@ -89,15 +91,19 @@ def client() -> TestClient:
         MaintenanceRecordModel,
     )
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
         dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
-    for table in (EquipmentModel.__table__, MaintenanceRecordModel.__table__,
-                  FailurePredictionModel.__table__):
+    for table in (
+        EquipmentModel.__table__,
+        MaintenanceRecordModel.__table__,
+        FailurePredictionModel.__table__,
+    ):
         table.schema = None
         table.create(bind=engine, checkfirst=True)
 
@@ -114,13 +120,15 @@ def client() -> TestClient:
 class TestApi:
     def test_equipment_flow(self, client: TestClient) -> None:
         pytest.importorskip("fastapi")
-        reg = client.post("/maintenance/equipment", json={
-            "name": "Crane-9", "equipment_type": "crane"})
+        reg = client.post(
+            "/maintenance/equipment", json={"name": "Crane-9", "equipment_type": "crane"}
+        )
         if reg.status_code != 201:
             pytest.skip(f"router not mounted yet: {reg.text}")
         eid = reg.json()["id"]
-        pred = client.post(f"/maintenance/equipment/{eid}/predictions",
-                           json={"failure_probability": 0.7})
+        pred = client.post(
+            f"/maintenance/equipment/{eid}/predictions", json={"failure_probability": 0.7}
+        )
         assert pred.status_code == 201
         assert pred.json()["risk_level"] == "high"
         health = client.get(f"/maintenance/equipment/{eid}/health")

@@ -24,8 +24,12 @@ def can_approve(inspection: Inspection) -> bool:
 
 
 def worst_severity(detections: list[DefectDetection]) -> DefectSeverity:
-    order = [DefectSeverity.NONE, DefectSeverity.MINOR, DefectSeverity.MAJOR,
-             DefectSeverity.CRITICAL]
+    order = [
+        DefectSeverity.NONE,
+        DefectSeverity.MINOR,
+        DefectSeverity.MAJOR,
+        DefectSeverity.CRITICAL,
+    ]
     worst = DefectSeverity.NONE
     for d in detections:
         if order.index(d.severity) > order.index(worst):
@@ -34,5 +38,4 @@ def worst_severity(detections: list[DefectDetection]) -> DefectSeverity:
 
 
 def needs_rework(detections: list[DefectDetection]) -> bool:
-    return worst_severity(detections) in (DefectSeverity.MAJOR,
-                                          DefectSeverity.CRITICAL)
+    return worst_severity(detections) in (DefectSeverity.MAJOR, DefectSeverity.CRITICAL)

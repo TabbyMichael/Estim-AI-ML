@@ -42,8 +42,9 @@ def _translate(exc: Exception) -> Exception:
     return exc
 
 
-@router.post("/snapshots", response_model=StockSnapshotResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/snapshots", response_model=StockSnapshotResponse, status_code=status.HTTP_201_CREATED
+)
 def create_snapshot(
     body: StockSnapshotCreate,
     svc: InventoryService = Depends(_service),
@@ -56,20 +57,25 @@ def create_snapshot(
 
 @router.get("/snapshots", response_model=StockSnapshotListResponse)
 def list_snapshots(
-    skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000),
-    material_id: str | None = Query(None), site_id: str | None = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    material_id: str | None = Query(None),
+    site_id: str | None = Query(None),
     svc: InventoryService = Depends(_service),
 ) -> StockSnapshotListResponse:
-    filters = {k: v for k, v in
-               {"material_id": material_id, "site_id": site_id}.items() if v}
+    filters = {k: v for k, v in {"material_id": material_id, "site_id": site_id}.items() if v}
     snaps, total = svc.list_snapshots(skip, limit, filters)
     return StockSnapshotListResponse(
         snapshots=[StockSnapshotResponse.from_entity(s) for s in snaps],
-        total=total, skip=skip, limit=limit)
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
-@router.post("/forecasts", response_model=DemandForecastResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/forecasts", response_model=DemandForecastResponse, status_code=status.HTTP_201_CREATED
+)
 def create_forecast(
     body: DemandForecastCreate,
     svc: InventoryService = Depends(_service),
@@ -85,23 +91,27 @@ def create_forecast(
 
 @router.get("/forecasts", response_model=DemandForecastListResponse)
 def list_forecasts(
-    skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000),
-    material_id: str | None = Query(None), site_id: str | None = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    material_id: str | None = Query(None),
+    site_id: str | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
     svc: InventoryService = Depends(_service),
 ) -> DemandForecastListResponse:
-    filters = DemandForecastFilters(material_id=material_id, site_id=site_id,
-                                    status=status_filter)
+    filters = DemandForecastFilters(material_id=material_id, site_id=site_id, status=status_filter)
     forecasts, total = svc.list_forecasts(skip, limit, filters)
     return DemandForecastListResponse(
         forecasts=[DemandForecastResponse.from_entity(f) for f in forecasts],
-        total=total, skip=skip, limit=limit)
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
-@router.post("/forecasts/{forecast_id}/generate",
-             response_model=DemandForecastResponse)
+@router.post("/forecasts/{forecast_id}/generate", response_model=DemandForecastResponse)
 def generate_forecast(
-    forecast_id: str, svc: InventoryService = Depends(_service),
+    forecast_id: str,
+    svc: InventoryService = Depends(_service),
     db: Session = Depends(get_db),
 ) -> DemandForecastResponse:
     try:
@@ -112,10 +122,10 @@ def generate_forecast(
     return DemandForecastResponse.from_entity(forecast)
 
 
-@router.post("/forecasts/{forecast_id}/approve",
-             response_model=DemandForecastResponse)
+@router.post("/forecasts/{forecast_id}/approve", response_model=DemandForecastResponse)
 def approve_forecast(
-    forecast_id: str, approved_by: str = Query(..., min_length=1),
+    forecast_id: str,
+    approved_by: str = Query(..., min_length=1),
     svc: InventoryService = Depends(_service),
     db: Session = Depends(get_db),
 ) -> DemandForecastResponse:
@@ -129,7 +139,8 @@ def approve_forecast(
 
 @router.get("/stockout-check")
 def stockout_check(
-    material_id: str = Query(...), site_id: str = Query(...),
+    material_id: str = Query(...),
+    site_id: str = Query(...),
     daily_demand: Decimal = Query(..., ge=0),
     horizon_days: int = Query(14, gt=0),
     svc: InventoryService = Depends(_service),

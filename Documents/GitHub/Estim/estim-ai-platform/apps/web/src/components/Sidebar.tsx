@@ -165,6 +165,7 @@ export default function Sidebar() {
           Notifications
         </Link>
         {user?.roles?.some((r) => r === 'admin' || r === 'platform_admin') && (
+<>
           <Link href="/admin/users" className={`nav-item${pathname.startsWith('/admin') ? ' active' : ''}`}>
             <span className="nav-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -173,6 +174,24 @@ export default function Sidebar() {
             </span>
             Admin · Users
           </Link>
+
+        <Link href="/geospatial-map" className={`nav-item${pathname === '/geospatial-map' ? ' active' : ''}`}>
+          <span className="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 21s7-4.5 7-11a7 7 0 0 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>
+            </svg>
+          </span>
+          Locations
+        </Link>
+        <Link href="/gantt" className={`nav-item${pathname === '/gantt' ? ' active' : ''}`}>
+          <span className="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3v18h18"/><rect x="3" y="7" width="4" height="4"/><rect x="8" y="3" width="4" height="4"/><rect x="13" y="7" width="4" height="4"/><rect x="18" y="12" width="4" height="4"/>
+            </svg>
+          </span>
+          Gantt
+        </Link>
+</>
         )}
       </div>
 

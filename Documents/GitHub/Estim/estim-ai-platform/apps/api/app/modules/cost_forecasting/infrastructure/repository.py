@@ -29,9 +29,7 @@ class SqlAlchemyCostForecastRepository:
             raise NotFoundError(f"Cost forecast {forecast_id} not found.")
         return mappers.model_to_forecast(model)
 
-    def exists_for_project_type(
-        self, project_id: str, forecast_type: str
-    ) -> bool:
+    def exists_for_project_type(self, project_id: str, forecast_type: str) -> bool:
         stmt = select(CostForecastModel.id).where(
             CostForecastModel.project_id == project_id,
             CostForecastModel.forecast_type == forecast_type,
@@ -134,17 +132,13 @@ class SqlAlchemyForecastModelRepository:
         return mappers.model_to_forecast_model(merged)
 
     def get_active(self) -> ForecastModel | None:
-        stmt = select(ForecastModelModel).where(
-            ForecastModelModel.is_active == True  # noqa: E712
-        )
+        stmt = select(ForecastModelModel).where(ForecastModelModel.is_active == True)  # noqa: E712
         result = self.session.execute(stmt).scalar_one_or_none()
         if result is None:
             return None
         return mappers.model_to_forecast_model(result)
 
-    def list_models(
-        self, skip: int = 0, limit: int = 100
-    ) -> tuple[list[ForecastModel], int]:
+    def list_models(self, skip: int = 0, limit: int = 100) -> tuple[list[ForecastModel], int]:
         stmt = select(ForecastModelModel)
         count_stmt = select(func.count(ForecastModelModel.id))
         total = self.session.execute(count_stmt).scalar_one()

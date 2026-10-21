@@ -6,24 +6,25 @@ from typing import Any
 from app.shared.ml_base import EvaluationResult
 
 FEATURE_NAMES = [
-    "recent_mean", "recent_max", "recent_min", "trend_slope",
-    "history_len", "horizon_days",
+    "recent_mean",
+    "recent_max",
+    "recent_min",
+    "trend_slope",
+    "history_len",
+    "horizon_days",
 ]
 
 MODEL_NAME = "demand_forecaster"
 MODEL_VERSION = "v1"
 
 
-def extract_demand_features(
-    history: list[Decimal], horizon_days: int = 30
-) -> list[float]:
+def extract_demand_features(history: list[Decimal], horizon_days: int = 30) -> list[float]:
     vals = [float(v) for v in history]
     if not vals:
         return [0.0, 0.0, 0.0, 0.0, 0.0, float(horizon_days)]
     n = len(vals)
     slope = (vals[-1] - vals[0]) / n if n > 1 else 0.0
-    return [sum(vals) / n, max(vals), min(vals), slope, float(n),
-            float(horizon_days)]
+    return [sum(vals) / n, max(vals), min(vals), slope, float(n), float(horizon_days)]
 
 
 class DemandForecaster:
@@ -37,9 +38,7 @@ class DemandForecaster:
     def attach_booster(self, booster: object) -> None:
         self._booster = booster
 
-    def predict(
-        self, history: list[Decimal], horizon_days: int = 30
-    ) -> dict[str, float]:
+    def predict(self, history: list[Decimal], horizon_days: int = 30) -> dict[str, float]:
         features = extract_demand_features(history, horizon_days)
         if self._booster is not None:
             try:
@@ -50,9 +49,11 @@ class DemandForecaster:
             predicted = self._heuristic(features)
         predicted = max(0.0, predicted)
         band = predicted * 0.15 + 1.0
-        return {"predicted_quantity": predicted,
-                "confidence_low": max(0.0, predicted - band),
-                "confidence_high": predicted + band}
+        return {
+            "predicted_quantity": predicted,
+            "confidence_low": max(0.0, predicted - band),
+            "confidence_high": predicted + band,
+        }
 
     def _heuristic(self, features: list[float]) -> float:
         mean, _mx, _mn, slope, _n, horizon = features
@@ -63,14 +64,17 @@ class DemandForecaster:
         return self.predict(history, horizon)["predicted_quantity"]
 
     def health(self) -> dict:
-        return {"model_name": self.model_name,
-                "model_version": self.model_version,
-                "backend": "lightgbm" if self._booster else "heuristic",
-                "ready": True}
+        return {
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "backend": "lightgbm" if self._booster else "heuristic",
+            "ready": True,
+        }
 
 
 def evaluate_demand(
-    actual: list[float], predicted: list[float],
+    actual: list[float],
+    predicted: list[float],
     model_version: str = MODEL_VERSION,
 ) -> EvaluationResult:
     errors = [abs(a - p) / a for a, p in zip(actual, predicted, strict=False) if a]
@@ -78,7 +82,7 @@ def evaluate_demand(
     mae_list = [abs(a - p) for a, p in zip(actual, predicted, strict=False)]
     mae = sum(mae_list) / len(mae_list) if mae_list else 0.0
     return EvaluationResult(
-        model_name=MODEL_NAME, model_version=model_version,
-        metrics={"mape": mape, "mae": mae,
-                 "accuracy": max(0.0, 1.0 - mape)},
+        model_name=MODEL_NAME,
+        model_version=model_version,
+        metrics={"mape": mape, "mae": mae, "accuracy": max(0.0, 1.0 - mape)},
     )

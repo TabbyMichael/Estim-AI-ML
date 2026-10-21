@@ -58,13 +58,13 @@ class SqlAlchemyMaintenanceRecordRepository:
         self.session.flush()
         return mappers.model_to_record(merged)
 
-    def list_for_equipment(
-        self, equipment_id: str, limit: int = 100
-    ) -> list[MaintenanceRecord]:
-        stmt = (select(MaintenanceRecordModel)
-                .where(MaintenanceRecordModel.equipment_id == equipment_id)
-                .order_by(MaintenanceRecordModel.performed_at.desc())
-                .limit(limit))
+    def list_for_equipment(self, equipment_id: str, limit: int = 100) -> list[MaintenanceRecord]:
+        stmt = (
+            select(MaintenanceRecordModel)
+            .where(MaintenanceRecordModel.equipment_id == equipment_id)
+            .order_by(MaintenanceRecordModel.performed_at.desc())
+            .limit(limit)
+        )
         rows = self.session.execute(stmt).scalars().all()
         return [mappers.model_to_record(r) for r in rows]
 
@@ -79,8 +79,11 @@ class SqlAlchemyFailurePredictionRepository:
         return mappers.model_to_prediction(merged)
 
     def latest_for(self, equipment_id: str) -> FailurePrediction | None:
-        stmt = (select(FailurePredictionModel)
-                .where(FailurePredictionModel.equipment_id == equipment_id)
-                .order_by(FailurePredictionModel.created_at.desc()).limit(1))
+        stmt = (
+            select(FailurePredictionModel)
+            .where(FailurePredictionModel.equipment_id == equipment_id)
+            .order_by(FailurePredictionModel.created_at.desc())
+            .limit(1)
+        )
         row = self.session.execute(stmt).scalar_one_or_none()
         return mappers.model_to_prediction(row) if row else None

@@ -23,30 +23,23 @@ class DocumentModel(Base):
     __tablename__ = "documents"
     __table_args__ = {"schema": "document_intelligence"}
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True,
-                                          default=uuid.uuid4)
-    project_id: Mapped[str] = mapped_column(String(100), nullable=False,
-                                            index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     storage_key: Mapped[str] = mapped_column(String(500), nullable=False)
-    content_type: Mapped[str] = mapped_column(String(100),
-                                              default="application/pdf")
+    content_type: Mapped[str] = mapped_column(String(100), default="application/pdf")
     status: Mapped[str] = mapped_column(String(30), default="uploaded")
     created_by: Mapped[str] = mapped_column(String(100), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
-                                                 default=_utcnow)
-    indexed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class DocumentChunkModel(Base):
     __tablename__ = "document_chunks"
     __table_args__ = {"schema": "document_intelligence"}
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True,
-                                          default=uuid.uuid4)
-    document_id: Mapped[str] = mapped_column(String(100), nullable=False,
-                                             index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -56,12 +49,8 @@ class EmbeddingModel(Base):
     __tablename__ = "embeddings"
     __table_args__ = {"schema": "document_intelligence"}
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True,
-                                          default=uuid.uuid4)
-    chunk_id: Mapped[str] = mapped_column(String(100), nullable=False,
-                                          index=True)
-    document_id: Mapped[str] = mapped_column(String(100), nullable=False,
-                                             index=True)
-    vector_json: Mapped[str] = mapped_column(Text, nullable=False,
-                                             default="[]")
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chunk_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    document_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    vector_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     model_version: Mapped[str] = mapped_column(String(50), default="v1")

@@ -23,10 +23,8 @@ def upgrade() -> None:
         sa.Column("quantity_on_hand", sa.Numeric(18, 4), nullable=False),
         sa.Column("unit", sa.String(20), nullable=False, server_default="units"),
         sa.Column("recorded_at", sa.TIMESTAMP(timezone=True)),
-        sa.Column("reorder_point", sa.Numeric(18, 4), nullable=False,
-                  server_default="0"),
-        sa.Column("snapshot_metadata", sa.Text(), nullable=False,
-                  server_default="{}"),
+        sa.Column("reorder_point", sa.Numeric(18, 4), nullable=False, server_default="0"),
+        sa.Column("snapshot_metadata", sa.Text(), nullable=False, server_default="{}"),
         schema="inventory",
     )
     op.create_table(
@@ -39,8 +37,7 @@ def upgrade() -> None:
         sa.Column("predicted_quantity", sa.Numeric(18, 4), nullable=False),
         sa.Column("confidence_low", sa.Numeric(18, 4), nullable=False),
         sa.Column("confidence_high", sa.Numeric(18, 4), nullable=False),
-        sa.Column("horizon_days", sa.Integer(), nullable=False,
-                  server_default="30"),
+        sa.Column("horizon_days", sa.Integer(), nullable=False, server_default="30"),
         sa.Column("model_version", sa.String(50), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True)),
         sa.Column("created_by", sa.String(100), nullable=False),

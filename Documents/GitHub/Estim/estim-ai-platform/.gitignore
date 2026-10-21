@@ -10,8 +10,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Anchored to the repository root: an unanchored `lib/` also matched
+# `apps/web/src/lib/`, silently preventing those TypeScript sources
+# (e.g. realtime-context.tsx) from ever being committed.
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -103,3 +106,4 @@ secrets/
 *.key
 *.pem
 *.crt
+*.tsbuildinfo

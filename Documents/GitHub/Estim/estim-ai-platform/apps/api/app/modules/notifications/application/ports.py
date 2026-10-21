@@ -15,7 +15,10 @@ class NotificationRepository(Protocol):
     def save(self, notification: Notification) -> Notification: ...
     def delete(self, notification_id: str) -> None: ...
     def list_for_user(
-        self, user_id: str, skip: int = 0, limit: int = 50,
+        self,
+        user_id: str,
+        skip: int = 0,
+        limit: int = 50,
         status: str | None = None,
     ) -> tuple[list[Notification], int]: ...
 

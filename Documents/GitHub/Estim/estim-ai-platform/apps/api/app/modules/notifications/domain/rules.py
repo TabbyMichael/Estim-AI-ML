@@ -6,7 +6,7 @@ TEMPLATES: dict[str, dict[str, str]] = {
     "forecast.approved": {
         "subject": "Cost forecast approved for {project_id}",
         "body": "Forecast {forecast_id} (predicted {predicted_amount}) was "
-                "approved by {approved_by}.",
+        "approved by {approved_by}.",
     },
     "forecast.rejected": {
         "subject": "Cost forecast rejected for {project_id}",
@@ -30,8 +30,7 @@ TEMPLATES: dict[str, dict[str, str]] = {
     },
     "stockout.risk": {
         "subject": "Stockout risk for {material_id}",
-        "body": "Material {material_id} at {site_id} has "
-                "{days_of_cover:.1f} days of cover.",
+        "body": "Material {material_id} at {site_id} has " "{days_of_cover:.1f} days of cover.",
     },
     "inventory.low_stock": {
         "subject": "Low stock warning: {material_id}",
@@ -39,8 +38,7 @@ TEMPLATES: dict[str, dict[str, str]] = {
     },
     "maintenance.equipment_alert": {
         "subject": "Equipment alert: {equipment_id}",
-        "body": "Equipment {equipment_id} reports {alert_type} "
-                "(health {health_score}).",
+        "body": "Equipment {equipment_id} reports {alert_type} " "(health {health_score}).",
     },
     "risk.level_changed": {
         "subject": "Risk level changed for {project_id}",
@@ -48,8 +46,7 @@ TEMPLATES: dict[str, dict[str, str]] = {
     },
     "inspection.completed": {
         "subject": "Inspection {inspection_id} completed",
-        "body": "Inspection found {defect_count} defects "
-                "(severity {max_severity}).",
+        "body": "Inspection found {defect_count} defects " "(severity {max_severity}).",
     },
     "document.processed": {
         "subject": "Document {document_id} processed",
@@ -105,14 +102,19 @@ def template_for_event(event_type: str) -> str:
 
 
 def allows(
-    prefs: list[NotificationPreference], user_id: str,
-    channel: Channel, event_type: str,
+    prefs: list[NotificationPreference],
+    user_id: str,
+    channel: Channel,
+    event_type: str,
 ) -> bool:
     """Preference gate: explicit disable wins; wildcard covers all."""
-    relevant = [p for p in prefs
-                if p.user_id == user_id and p.channel == channel
-                and p.event_type in ("*", event_type)]
+    relevant = [
+        p
+        for p in prefs
+        if p.user_id == user_id and p.channel == channel and p.event_type in ("*", event_type)
+    ]
     if any(not p.enabled for p in relevant if p.event_type == event_type):
         return False
     return any(p.enabled for p in relevant) or not any(
-        p.user_id == user_id and p.channel == channel for p in prefs)
+        p.user_id == user_id and p.channel == channel for p in prefs
+    )

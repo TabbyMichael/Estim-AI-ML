@@ -12,8 +12,7 @@ from app.shared.ml_base import EvaluationResult
 MODEL_NAME = "defect_detector"
 MODEL_VERSION = "v1"
 
-DEFECT_TYPES = ["crack", "spalling", "corrosion", "exposed_rebar",
-                "honeycombing", "efflorescence"]
+DEFECT_TYPES = ["crack", "spalling", "corrosion", "exposed_rebar", "honeycombing", "efflorescence"]
 
 
 class YOLODetector:
@@ -43,9 +42,13 @@ class YOLODetector:
         results = fn(image_ref)  # ultralytics-style callable
         out = []
         for r in results:
-            out.append({"defect_type": str(r.get("name", "crack")),
-                        "confidence": float(r.get("confidence", 0.0)),
-                        "bbox": r.get("bbox")})
+            out.append(
+                {
+                    "defect_type": str(r.get("name", "crack")),
+                    "confidence": float(r.get("confidence", 0.0)),
+                    "bbox": r.get("bbox"),
+                }
+            )
         return out
 
     def _stub(self, image_ref: str) -> list[dict]:
@@ -55,8 +58,13 @@ class YOLODetector:
             return []
         defect = DEFECT_TYPES[h % len(DEFECT_TYPES)]
         conf = 0.45 + (h % 50) / 100.0
-        return [{"defect_type": defect, "confidence": round(conf, 3),
-                 "bbox": {"x": 10, "y": 10, "w": 100, "h": 100}}]
+        return [
+            {
+                "defect_type": defect,
+                "confidence": round(conf, 3),
+                "bbox": {"x": 10, "y": 10, "w": 100, "h": 100},
+            }
+        ]
 
     def score(self, item: str) -> float:
         dets = self.detect(item)
@@ -65,26 +73,33 @@ class YOLODetector:
         return float(max(d["confidence"] for d in dets))
 
     def health(self) -> dict:
-        return {"model_name": self.model_name,
-                "model_version": self.model_version,
-                "backend": "yolo" if self._model else "stub",
-                "ready": True}
+        return {
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "backend": "yolo" if self._model else "stub",
+            "ready": True,
+        }
 
 
-def evaluate_detections(
-    expected: list[bool], predicted: list[bool]
-) -> EvaluationResult:
+def evaluate_detections(expected: list[bool], predicted: list[bool]) -> EvaluationResult:
     tp = sum(1 for e, p in zip(expected, predicted, strict=False) if e and p)
     fp = sum(1 for e, p in zip(expected, predicted, strict=False) if not e and p)
     fn = sum(1 for e, p in zip(expected, predicted, strict=False) if e and not p)
     precision = tp / (tp + fp) if (tp + fp) else 0.0
     recall = tp / (tp + fn) if (tp + fn) else 0.0
-    f1 = (2 * precision * recall / (precision + recall)
-          if (precision + recall) else 0.0)
-    return EvaluationResult(model_name=MODEL_NAME, model_version=MODEL_VERSION,
-                            metrics={"precision": precision, "recall": recall,
-                                     "f1": f1})
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    return EvaluationResult(
+        model_name=MODEL_NAME,
+        model_version=MODEL_VERSION,
+        metrics={"precision": precision, "recall": recall, "f1": f1},
+    )
 
 
-__all__ = ["YOLODetector", "evaluate_detections", "rules",
-           "DEFECT_TYPES", "MODEL_NAME", "MODEL_VERSION"]
+__all__ = [
+    "YOLODetector",
+    "evaluate_detections",
+    "rules",
+    "DEFECT_TYPES",
+    "MODEL_NAME",
+    "MODEL_VERSION",
+]

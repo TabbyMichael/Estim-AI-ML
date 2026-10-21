@@ -1,7 +1,6 @@
 """Tests for OpenTelemetry distributed tracing."""
 
 import opentelemetry.trace as otel_trace
-
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 

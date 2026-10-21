@@ -57,50 +57,50 @@ def session() -> Iterator[Session]:
 
 def _forecast(**kwargs) -> CostForecast:
     now = datetime.now(UTC)
-    base = dict(
-        id=str(uuid.uuid4()),
-        project_id="PROJ-001",
-        forecast_type=ForecastType.PROJECT_TOTAL,
-        status=ForecastStatus.DRAFT,
-        predicted_amount=Decimal("100000.00"),
-        confidence_interval_low=Decimal("90000.00"),
-        confidence_interval_high=Decimal("110000.00"),
-        model_version="v1",
-        created_at=now,
-        created_by="user-1",
-    )
+    base = {
+        "id": str(uuid.uuid4()),
+        "project_id": "PROJ-001",
+        "forecast_type": ForecastType.PROJECT_TOTAL,
+        "status": ForecastStatus.DRAFT,
+        "predicted_amount": Decimal("100000.00"),
+        "confidence_interval_low": Decimal("90000.00"),
+        "confidence_interval_high": Decimal("110000.00"),
+        "model_version": "v1",
+        "created_at": now,
+        "created_by": "user-1",
+    }
     base.update(kwargs)
     return CostForecast(**base)
 
 
 def _snapshot(**kwargs) -> CostSnapshot:
     now = datetime.now(UTC)
-    base = dict(
-        id=str(uuid.uuid4()),
-        project_id="PROJ-001",
-        category="materials",
-        amount=Decimal("50000.00"),
-        recorded_at=now,
-        currency="USD",
-        metadata={"source": "odoo"},
-    )
+    base = {
+        "id": str(uuid.uuid4()),
+        "project_id": "PROJ-001",
+        "category": "materials",
+        "amount": Decimal("50000.00"),
+        "recorded_at": now,
+        "currency": "USD",
+        "metadata": {"source": "odoo"},
+    }
     base.update(kwargs)
     return CostSnapshot(**base)
 
 
 def _model(**kwargs) -> ForecastModel:
     now = datetime.now(UTC)
-    base = dict(
-        id=str(uuid.uuid4()),
-        name="LightGBM",
-        version="v1",
-        model_type="regressor",
-        training_period_start=now,
-        training_period_end=now,
-        is_active=True,
-        created_at=now,
-        metrics={"mape": 0.05},
-    )
+    base = {
+        "id": str(uuid.uuid4()),
+        "name": "LightGBM",
+        "version": "v1",
+        "model_type": "regressor",
+        "training_period_start": now,
+        "training_period_end": now,
+        "is_active": True,
+        "created_at": now,
+        "metrics": {"mape": 0.05},
+    }
     base.update(kwargs)
     return ForecastModel(**base)
 

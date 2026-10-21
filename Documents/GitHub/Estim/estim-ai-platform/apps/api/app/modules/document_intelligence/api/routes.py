@@ -48,21 +48,23 @@ def _rag_service(db: Session = Depends(get_db)) -> RAGService:
     )
 
 
-@router.post("/upload", response_model=DocumentResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 def upload_document(
-    body: DocumentUploadRequest, svc: DocumentService = Depends(_doc_service),
+    body: DocumentUploadRequest,
+    svc: DocumentService = Depends(_doc_service),
     db: Session = Depends(get_db),
 ) -> DocumentResponse:
-    doc = svc.upload(body.project_id, body.filename, body.storage_key,
-                     body.content_type, body.created_by)
+    doc = svc.upload(
+        body.project_id, body.filename, body.storage_key, body.content_type, body.created_by
+    )
     db.commit()
     return DocumentResponse.from_entity(doc)
 
 
 @router.get("", response_model=DocumentListResponse)
 def list_documents(
-    skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
     project_id: str | None = Query(None),
     svc: DocumentService = Depends(_doc_service),
 ) -> DocumentListResponse:
@@ -70,22 +72,26 @@ def list_documents(
     docs, total = svc.list_documents(skip, limit, filters)
     return DocumentListResponse(
         documents=[DocumentResponse.from_entity(d) for d in docs],
-        total=total, skip=skip, limit=limit)
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.post("/{document_id}/index")
 def index_document(
-    document_id: str, body: IndexRequest,
+    document_id: str,
+    body: IndexRequest,
     svc: DocumentService = Depends(_doc_service),
     db: Session = Depends(get_db),
 ) -> dict:
     try:
-        out = svc.index_document(document_id, body.text,
-                                 EmbeddingModel().embed)
+        out = svc.index_document(document_id, body.text, EmbeddingModel().embed)
     except domain_errors.NotFoundError as exc:
         raise CoreNotFound(str(exc)) from exc
     except ValueError as exc:
         from app.core.exceptions import BadRequestError
+
         raise BadRequestError(str(exc)) from exc
     db.commit()
     return out
@@ -93,15 +99,18 @@ def index_document(
 
 @router.post("/search")
 def search(
-    body: SearchRequest, svc: RAGService = Depends(_rag_service),
+    body: SearchRequest,
+    svc: RAGService = Depends(_rag_service),
 ) -> dict:
     return {"results": svc.search(body.query, body.limit)}
 
 
 @router.post("/ask", response_model=AskResponse)
 def ask(
-    body: AskRequest, svc: RAGService = Depends(_rag_service),
+    body: AskRequest,
+    svc: RAGService = Depends(_rag_service),
 ) -> AskResponse:
     out = svc.answer(body.query, body.limit)
-    return AskResponse(query=out["query"], answer=out["answer"],
-                       sources=[SourceHit(**s) for s in out["sources"]])
+    return AskResponse(
+        query=out["query"], answer=out["answer"], sources=[SourceHit(**s) for s in out["sources"]]
+    )

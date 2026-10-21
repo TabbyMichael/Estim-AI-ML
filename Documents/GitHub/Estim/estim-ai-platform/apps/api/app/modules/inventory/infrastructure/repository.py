@@ -32,13 +32,12 @@ class SqlAlchemyStockRepository:
         self.session.flush()
         return mappers.model_to_snapshot(merged)
 
-    def latest_for(
-        self, material_id: str, site_id: str
-    ) -> StockSnapshot | None:
+    def latest_for(self, material_id: str, site_id: str) -> StockSnapshot | None:
         stmt = (
             select(StockSnapshotModel)
-            .where(StockSnapshotModel.material_id == material_id,
-                   StockSnapshotModel.site_id == site_id)
+            .where(
+                StockSnapshotModel.material_id == material_id, StockSnapshotModel.site_id == site_id
+            )
             .order_by(StockSnapshotModel.recorded_at.desc())
             .limit(1)
         )

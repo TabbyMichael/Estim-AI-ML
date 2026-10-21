@@ -27,10 +27,8 @@ from app.modules.visual_inspection.ml.detection import (
 
 class TestDomain:
     def test_severity(self) -> None:
-        assert rules.severity_from_confidence(0.9, "crack") == \
-            DefectSeverity.CRITICAL
-        assert rules.severity_from_confidence(0.1, "crack") == \
-            DefectSeverity.NONE
+        assert rules.severity_from_confidence(0.9, "crack") == DefectSeverity.CRITICAL
+        assert rules.severity_from_confidence(0.1, "crack") == DefectSeverity.NONE
 
     def test_lifecycle(self) -> None:
         insp = Inspection(id=str(uuid4()), project_id="P")
@@ -39,9 +37,16 @@ class TestDomain:
         assert insp.status.value == "approved"
 
     def test_worst(self) -> None:
-        dets = [DefectDetection(id=str(uuid4()), image_id="i",
-                                inspection_id="x", defect_type="crack",
-                                confidence=0.9, severity=DefectSeverity.MAJOR)]
+        dets = [
+            DefectDetection(
+                id=str(uuid4()),
+                image_id="i",
+                inspection_id="x",
+                defect_type="crack",
+                confidence=0.9,
+                severity=DefectSeverity.MAJOR,
+            )
+        ]
         assert rules.needs_rework(dets) is True
 
 
@@ -49,8 +54,7 @@ class TestApplication:
     def test_create_and_summary(self) -> None:
         repo = Mock()
         repo.save.side_effect = lambda i: i
-        repo.get_by_id.return_value = Inspection(id=str(uuid4()),
-                                                 project_id="P")
+        repo.get_by_id.return_value = Inspection(id=str(uuid4()), project_id="P")
         det_repo = Mock()
         det_repo.list_for_inspection.return_value = []
         svc = VisualInspectionService(inspections=repo, detections=det_repo)
@@ -78,16 +82,20 @@ def client() -> TestClient:
         InspectionModel,
     )
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
         dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
     # JSON column is fine on SQLite; create via Table objects.
-    for table in (InspectionModel.__table__, ImageAssetModel.__table__,
-                  DefectDetectionModel.__table__):
+    for table in (
+        InspectionModel.__table__,
+        ImageAssetModel.__table__,
+        DefectDetectionModel.__table__,
+    ):
         table.schema = None
         table.create(bind=engine, checkfirst=True)
 
@@ -103,17 +111,20 @@ def client() -> TestClient:
 
 class TestApi:
     def test_inspection_flow(self, client: TestClient) -> None:
-        reg = client.post("/visual-inspection/inspections", json={
-            "project_id": "P-9", "title": "Slab"})
+        reg = client.post(
+            "/visual-inspection/inspections", json={"project_id": "P-9", "title": "Slab"}
+        )
         if reg.status_code != 201:
             pytest.skip(f"router not mounted yet: {reg.text}")
         iid = reg.json()["id"]
-        img = client.post(f"/visual-inspection/inspections/{iid}/images",
-                          json={"storage_key": "s3://bucket/img.jpg"})
+        img = client.post(
+            f"/visual-inspection/inspections/{iid}/images",
+            json={"storage_key": "s3://bucket/img.jpg"},
+        )
         assert img.status_code == 201
         det = client.post(
             f"/visual-inspection/inspections/{iid}/detections",
-            json={"image_id": img.json()["id"], "defect_type": "crack",
-                  "confidence": 0.85})
+            json={"image_id": img.json()["id"], "defect_type": "crack", "confidence": 0.85},
+        )
         assert det.status_code == 201
         assert det.json()["severity"] == "critical"

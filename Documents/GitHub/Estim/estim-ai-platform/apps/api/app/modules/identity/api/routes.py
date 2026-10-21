@@ -38,7 +38,6 @@ from app.modules.identity.api.schemas import (
 )
 from app.modules.identity.application.services import AuthService, RoleService, UserService
 from app.modules.identity.domain import entities as domain_errors
-from app.modules.identity.domain.entities import Permission, Role
 from app.modules.identity.infrastructure.repository import (
     SqlAlchemyPermissionRepository,
     SqlAlchemyRoleRepository,
@@ -295,14 +294,17 @@ def admin_bulk_deactivate(
 
 @router.get("/admin/users/activity", response_model=list[UserActivityResponse])
 def admin_user_activity(
-    _: CurrentUser = AdminUser,
+    current_user: CurrentUser = AdminUser,
     svc: UserService = Depends(_user_service),
 ) -> list[UserActivityResponse]:
     users, _ = svc.list_users(skip=0, limit=500)
     return [
         UserActivityResponse(
-            user_id=u.id, email=u.email, last_login_at=u.last_login_at,
-            is_active=u.is_active, roles=list(u.roles),
+            user_id=u.id,
+            email=u.email,
+            last_login_at=u.last_login_at,
+            is_active=u.is_active,
+            roles=list(u.roles),
         )
         for u in users
     ]
@@ -328,8 +330,9 @@ def admin_create_role(
 ) -> RoleResponse:
     role = svc.create_role(body.name, body.description, body.permissions)
     db.commit()
-    return RoleResponse(name=role.name, description=role.description,
-                        permissions=list(role.permissions))
+    return RoleResponse(
+        name=role.name, description=role.description, permissions=list(role.permissions)
+    )
 
 
 @router.post("/admin/roles/{role_name}/permissions", response_model=RoleResponse)
@@ -342,8 +345,9 @@ def admin_grant_permission(
 ) -> RoleResponse:
     role = svc.grant(role_name, body.permission)
     db.commit()
-    return RoleResponse(name=role.name, description=role.description,
-                        permissions=list(role.permissions))
+    return RoleResponse(
+        name=role.name, description=role.description, permissions=list(role.permissions)
+    )
 
 
 @router.delete("/admin/roles/{role_name}/permissions/{permission}", response_model=RoleResponse)
@@ -356,8 +360,9 @@ def admin_revoke_permission(
 ) -> RoleResponse:
     role = svc.revoke(role_name, permission)
     db.commit()
-    return RoleResponse(name=role.name, description=role.description,
-                        permissions=list(role.permissions))
+    return RoleResponse(
+        name=role.name, description=role.description, permissions=list(role.permissions)
+    )
 
 
 @router.get("/admin/permissions", response_model=list[PermissionResponse])
@@ -365,5 +370,6 @@ def admin_list_permissions(
     _: CurrentUser = AdminUser,
     repo: SqlAlchemyPermissionRepository = Depends(_permission_repo),
 ) -> list[PermissionResponse]:
-    return [PermissionResponse(code=p.code, description=p.description)
-            for p in repo.list_permissions()]
+    return [
+        PermissionResponse(code=p.code, description=p.description) for p in repo.list_permissions()
+    ]

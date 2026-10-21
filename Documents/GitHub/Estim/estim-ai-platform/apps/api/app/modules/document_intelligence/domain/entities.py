@@ -60,6 +60,7 @@ class Embedding:
 
     def similarity(self, other: list[float]) -> float:
         import math
+
         dot = sum(a * b for a, b in zip(self.vector, other, strict=False))
         na = math.sqrt(sum(a * a for a in self.vector))
         nb = math.sqrt(sum(b * b for b in other))

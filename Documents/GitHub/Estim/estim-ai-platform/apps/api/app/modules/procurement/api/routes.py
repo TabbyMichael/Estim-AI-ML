@@ -6,7 +6,6 @@ This module defines HTTP endpoints for procurement operations including:
 - Anomaly detection and review
 """
 
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -69,12 +68,12 @@ def create_purchase_order(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
-        )
+        ) from exc
     except ValidationError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
-        )
+        ) from exc
 
 
 @router.get("/purchase-orders", response_model=PurchaseOrderListResponse)
@@ -114,7 +113,7 @@ def get_purchase_order(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
-        )
+        ) from exc
 
 
 @router.put("/purchase-orders/{order_id}", response_model=PurchaseOrderResponse)
@@ -133,12 +132,12 @@ def update_purchase_order(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
-        )
+        ) from exc
     except InvalidStateError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
-        )
+        ) from exc
 
 
 @router.post("/purchase-orders/{order_id}/approve", response_model=PurchaseOrderResponse)
@@ -157,17 +156,17 @@ def approve_purchase_order(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
-        )
+        ) from exc
     except UnauthorizedApprovalError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=str(exc),
-        )
+        ) from exc
     except InsufficientStockError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
-        )
+        ) from exc
 
 
 @router.get("/anomalies", response_model=AnomalyListResponse)
@@ -208,9 +207,9 @@ def review_anomaly(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
-        )
+        ) from exc
     except InvalidStateError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
-        )
+        ) from exc

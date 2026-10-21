@@ -10,7 +10,9 @@ from datetime import UTC, datetime
 from typing import Any, Generic, Protocol, TypeVar
 
 TInput = TypeVar("TInput")
-TFeatures = TypeVar("TFeatures")
+# Covariant: a transformer only *produces* feature vectors, so a transformer of
+# `list[Specific]` is usable wherever a transformer of `list[General]` is expected.
+TFeatures = TypeVar("TFeatures", covariant=True)
 
 
 class FeatureTransformer(Protocol, Generic[TInput, TFeatures]):  # noqa: UP046
@@ -18,7 +20,7 @@ class FeatureTransformer(Protocol, Generic[TInput, TFeatures]):  # noqa: UP046
 
     feature_names: list[str]
 
-    def transform(self, items: list[TInput]) -> Any: ...
+    def transform(self, items: list[TInput]) -> TFeatures: ...
 
 
 class ModelAdapter(Protocol):

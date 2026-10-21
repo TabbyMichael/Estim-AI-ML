@@ -28,15 +28,13 @@ def _svc() -> tuple[ReportService, Mock, ProviderRegistry]:
     repo.save.side_effect = lambda r: r
     repo.list_reports.return_value = ([], 0)
     reg = ProviderRegistry()
-    reg.register("demo", lambda filters: {"count": len(filters), "rows": [
-        {"a": 1, "b": 2}]})
+    reg.register("demo", lambda filters: {"count": len(filters), "rows": [{"a": 1, "b": 2}]})
     return ReportService(reports=repo, providers=reg), repo, reg
 
 
 class TestTemplates:
     def test_render_markdown(self) -> None:
-        out = rules.render({"total": 5, "rows": [{"x": 1}]},
-                           ReportFormat.MARKDOWN, title="T")
+        out = rules.render({"total": 5, "rows": [{"x": 1}]}, ReportFormat.MARKDOWN, title="T")
         assert "# T" in out and "| x |" in out
 
     def test_render_csv(self) -> None:
@@ -96,8 +94,9 @@ def client() -> TestClient:
         ReportScheduleModel,
     )
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
@@ -119,8 +118,9 @@ def client() -> TestClient:
 
 class TestApi:
     def test_generate_and_list(self, client: TestClient) -> None:
-        gen = client.post("/reports/generate", json={
-            "report_type": "platform_overview", "format": "markdown"})
+        gen = client.post(
+            "/reports/generate", json={"report_type": "platform_overview", "format": "markdown"}
+        )
         assert gen.status_code == 201, gen.text
         assert gen.json()["status"] == "generated"
         listed = client.get("/reports")
@@ -132,8 +132,9 @@ class TestApi:
         assert gen.status_code == 400
 
     def test_schedule_flow(self, client: TestClient) -> None:
-        created = client.post("/reports/schedules", json={
-            "report_type": "platform_overview", "interval": "daily"})
+        created = client.post(
+            "/reports/schedules", json={"report_type": "platform_overview", "interval": "daily"}
+        )
         assert created.status_code == 201, created.text
         schedules = client.get("/reports/schedules/list")
         assert schedules.status_code == 200

@@ -8,16 +8,16 @@ This module defines the core business entities:
 
 These entities are pure Python dataclasses with no external dependencies.
 """
-from dataclasses import dataclass, field
+
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
-import uuid
 
 
 class OrderState(Enum):
     """Purchase order state enumeration."""
+
     DRAFT = "draft"
     SUBMITTED = "submitted"
     APPROVED = "approved"
@@ -27,6 +27,7 @@ class OrderState(Enum):
 
 class AnomalyStatus(Enum):
     """Anomaly review status enumeration."""
+
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -35,6 +36,7 @@ class AnomalyStatus(Enum):
 
 class AnomalyDecision(Enum):
     """Anomaly review decision enumeration."""
+
     APPROVE = "approve"
     REJECT = "reject"
     INVESTIGATE = "investigate"
@@ -42,6 +44,7 @@ class AnomalyDecision(Enum):
 
 class AnomalyType(Enum):
     """Classification of procurement anomalies."""
+
     PRICE = "price"
     QUANTITY = "quantity"
     DUPLICATE = "duplicate"
@@ -51,6 +54,7 @@ class AnomalyType(Enum):
 
 class RiskLevel(Enum):
     """Risk level enumeration."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -59,13 +63,14 @@ class RiskLevel(Enum):
 @dataclass
 class PurchaseOrderLine:
     """Represents a line item in a purchase order."""
+
     material_id: str
     material_name: str
     quantity: int
     unit_price: Decimal
     subtotal: Decimal
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate and calculate subtotal."""
         if self.quantity <= 0:
             raise ValueError("Quantity must be positive")
@@ -77,19 +82,20 @@ class PurchaseOrderLine:
 @dataclass
 class PurchaseOrder:
     """Represents a purchase order in the procurement domain."""
+
     id: str
     po_number: str
     supplier_id: str
     project_id: str
     total_amount: Decimal
     state: OrderState
-    line_items: List[PurchaseOrderLine]
+    line_items: list[PurchaseOrderLine]
     created_at: datetime
     updated_at: datetime
-    approved_by: Optional[str] = None
-    approved_at: Optional[datetime] = None
+    approved_by: str | None = None
+    approved_at: datetime | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate purchase order state."""
         if not self.id:
             raise ValueError("Purchase order ID is required")
@@ -107,9 +113,7 @@ class PurchaseOrder:
     def submit(self) -> None:
         """Submit the purchase order for approval."""
         if self.state != OrderState.DRAFT:
-            raise InvalidStateError(
-                f"Cannot submit order in {self.state.value} state"
-            )
+            raise InvalidStateError(f"Cannot submit order in {self.state.value} state")
         self.state = OrderState.SUBMITTED
         self.updated_at = datetime.utcnow()
 
@@ -123,15 +127,13 @@ class PurchaseOrder:
             InvalidStateError: If order is not in SUBMITTED state
         """
         if self.state != OrderState.SUBMITTED:
-            raise InvalidStateError(
-                f"Cannot approve order in {self.state.value} state"
-            )
+            raise InvalidStateError(f"Cannot approve order in {self.state.value} state")
         self.state = OrderState.APPROVED
         self.approved_by = user_id
         self.approved_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
-    def reject(self, user_id: str, reason: Optional[str] = None) -> None:
+    def reject(self, user_id: str, reason: str | None = None) -> None:
         """Reject the purchase order.
 
         Args:
@@ -142,9 +144,7 @@ class PurchaseOrder:
             InvalidStateError: If order is not in SUBMITTED or APPROVED state
         """
         if self.state not in [OrderState.SUBMITTED, OrderState.APPROVED]:
-            raise InvalidStateError(
-                f"Cannot reject order in {self.state.value} state"
-            )
+            raise InvalidStateError(f"Cannot reject order in {self.state.value} state")
         self.state = OrderState.REJECTED
         self.updated_at = datetime.utcnow()
 
@@ -155,9 +155,7 @@ class PurchaseOrder:
             InvalidStateError: If order is not in APPROVED state
         """
         if self.state != OrderState.APPROVED:
-            raise InvalidStateError(
-                f"Cannot complete order in {self.state.value} state"
-            )
+            raise InvalidStateError(f"Cannot complete order in {self.state.value} state")
         self.state = OrderState.COMPLETED
         self.updated_at = datetime.utcnow()
 
@@ -172,15 +170,11 @@ class PurchaseOrder:
             ValueError: If material already exists in line items
         """
         if self.state != OrderState.DRAFT:
-            raise InvalidStateError(
-                f"Cannot add line items to order in {self.state.value} state"
-            )
+            raise InvalidStateError(f"Cannot add line items to order in {self.state.value} state")
 
         material_ids = [item.material_id for item in self.line_items]
         if line_item.material_id in material_ids:
-            raise ValueError(
-                f"Material {line_item.material_id} already exists in line items"
-            )
+            raise ValueError(f"Material {line_item.material_id} already exists in line items")
 
         self.line_items.append(line_item)
         self.recalculate_total()
@@ -200,10 +194,7 @@ class PurchaseOrder:
                 f"Cannot remove line items from order in {self.state.value} state"
             )
 
-        self.line_items = [
-            item for item in self.line_items
-            if item.material_id != material_id
-        ]
+        self.line_items = [item for item in self.line_items if item.material_id != material_id]
 
         if len(self.line_items) == 0:
             raise ValueError("Purchase order must have at least one line item")
@@ -216,7 +207,11 @@ class PurchaseOrder:
         Returns:
             Updated total amount
         """
-        self.total_amount = sum(item.subtotal for item in self.line_items)
+        total: Decimal = sum(
+            (item.subtotal for item in self.line_items),
+            Decimal("0"),
+        )
+        self.total_amount = total
         self.updated_at = datetime.utcnow()
         return self.total_amount
 
@@ -224,6 +219,7 @@ class PurchaseOrder:
 @dataclass
 class Anomaly:
     """Represents a detected procurement anomaly."""
+
     id: str
     purchase_order_id: str
     po_number: str
@@ -233,12 +229,12 @@ class Anomaly:
     status: AnomalyStatus
     details: dict
     created_at: datetime
-    reviewed_by: Optional[str] = None
-    reviewed_at: Optional[datetime] = None
-    review_decision: Optional[AnomalyDecision] = None
-    review_notes: Optional[str] = None
+    reviewed_by: str | None = None
+    reviewed_at: datetime | None = None
+    review_decision: AnomalyDecision | None = None
+    review_notes: str | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate anomaly state."""
         if not self.id:
             raise ValueError("Anomaly ID is required")
@@ -247,7 +243,7 @@ class Anomaly:
         if self.anomaly_score < 0:
             raise ValueError("Anomaly score cannot be negative")
 
-    def approve(self, reviewer_id: str, notes: Optional[str] = None) -> None:
+    def approve(self, reviewer_id: str, notes: str | None = None) -> None:
         """Approve the anomaly (determine it's a false positive).
 
         Args:
@@ -258,16 +254,14 @@ class Anomaly:
             InvalidStateError: If anomaly is not in PENDING status
         """
         if self.status != AnomalyStatus.PENDING:
-            raise InvalidStateError(
-                f"Cannot approve anomaly in {self.status.value} status"
-            )
+            raise InvalidStateError(f"Cannot approve anomaly in {self.status.value} status")
         self.status = AnomalyStatus.APPROVED
         self.review_decision = AnomalyDecision.APPROVE
         self.reviewed_by = reviewer_id
         self.reviewed_at = datetime.utcnow()
         self.review_notes = notes
 
-    def reject(self, reviewer_id: str, notes: Optional[str] = None) -> None:
+    def reject(self, reviewer_id: str, notes: str | None = None) -> None:
         """Reject the anomaly (confirm it's a real issue).
 
         Args:
@@ -278,16 +272,14 @@ class Anomaly:
             InvalidStateError: If anomaly is not in PENDING status
         """
         if self.status != AnomalyStatus.PENDING:
-            raise InvalidStateError(
-                f"Cannot reject anomaly in {self.status.value} status"
-            )
+            raise InvalidStateError(f"Cannot reject anomaly in {self.status.value} status")
         self.status = AnomalyStatus.REJECTED
         self.review_decision = AnomalyDecision.REJECT
         self.reviewed_by = reviewer_id
         self.reviewed_at = datetime.utcnow()
         self.review_notes = notes
 
-    def investigate(self, reviewer_id: str, notes: Optional[str] = None) -> None:
+    def investigate(self, reviewer_id: str, notes: str | None = None) -> None:
         """Mark the anomaly for further investigation.
 
         Args:
@@ -313,29 +305,35 @@ class Anomaly:
 
 class InvalidStateError(Exception):
     """Raised when an operation is invalid for the current state."""
+
     pass
 
 
 class ValidationError(Exception):
     """Raised when entity validation fails."""
+
     pass
 
 
 class NotFoundError(Exception):
     """Raised when an entity is not found."""
+
     pass
 
 
 class DuplicateOrderError(Exception):
     """Raised when attempting to create a duplicate purchase order."""
+
     pass
 
 
 class UnauthorizedApprovalError(Exception):
     """Raised when a user is not authorized to approve an order."""
+
     pass
 
 
 class InsufficientStockError(Exception):
     """Raised when insufficient stock is available for an order."""
+
     pass

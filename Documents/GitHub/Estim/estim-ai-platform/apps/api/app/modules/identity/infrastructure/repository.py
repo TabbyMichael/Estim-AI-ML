@@ -62,16 +62,17 @@ class SqlAlchemyUserRepository:
         return list(self.session.execute(stmt).scalars().all())
 
     def list_users(
-        self, skip: int = 0, limit: int = 50, query: str | None = None,
+        self,
+        skip: int = 0,
+        limit: int = 50,
+        query: str | None = None,
         is_active: bool | None = None,
     ) -> tuple[list[User], int]:
         stmt = select(UserModel)
         count_stmt = select(func.count(UserModel.id))
         if query:
             like = f"%{query.strip().lower()}%"
-            stmt = stmt.where(
-                (UserModel.email.ilike(like)) | (UserModel.full_name.ilike(like))
-            )
+            stmt = stmt.where((UserModel.email.ilike(like)) | (UserModel.full_name.ilike(like)))
             count_stmt = count_stmt.where(
                 (UserModel.email.ilike(like)) | (UserModel.full_name.ilike(like))
             )

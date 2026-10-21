@@ -86,7 +86,7 @@ ODOO_DB=estim_staging
 ```bash
 # Clone repository
 git clone git@github.com:TabbyMichael/Estim-AI-ML.git
-cd Estim-AI-ML/estim-ai-platform
+cd Estim-AI-ML
 
 # Copy staging environment
 cp .env.staging .env

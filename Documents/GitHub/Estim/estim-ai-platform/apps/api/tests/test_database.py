@@ -1,8 +1,7 @@
 """Tests for database configuration."""
-import pytest
+
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from unittest.mock import patch
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 
 class TestDatabase:
@@ -50,7 +49,7 @@ class TestDatabase:
         """Test that Base declarative class exists."""
         Base = declarative_base()
         assert Base is not None
-        assert hasattr(Base, 'metadata')
+        assert hasattr(Base, "metadata")
 
     def test_sqlite_connection(self):
         """Test that we can connect to SQLite database."""

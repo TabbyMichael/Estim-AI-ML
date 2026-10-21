@@ -1,7 +1,6 @@
 """Pydantic schemas for the maintenance API."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -25,9 +24,15 @@ class EquipmentResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, e: Equipment) -> "EquipmentResponse":
-        return cls(id=e.id, name=e.name, equipment_type=e.equipment_type,
-                   site_id=e.site_id, status=e.status.value,
-                   operating_hours=e.operating_hours, created_at=e.created_at)
+        return cls(
+            id=e.id,
+            name=e.name,
+            equipment_type=e.equipment_type,
+            site_id=e.site_id,
+            status=e.status.value,
+            operating_hours=e.operating_hours,
+            created_at=e.created_at,
+        )
 
 
 class EquipmentListResponse(BaseModel):
@@ -58,12 +63,17 @@ class PredictionResponse(BaseModel):
     horizon_days: int
     model_version: str
     created_at: datetime
-    notes: Optional[str] = None
+    notes: str | None = None
 
     @classmethod
     def from_entity(cls, p: FailurePrediction) -> "PredictionResponse":
-        return cls(id=p.id, equipment_id=p.equipment_id,
-                   failure_probability=p.failure_probability,
-                   risk_level=p.risk_level.value, horizon_days=p.horizon_days,
-                   model_version=p.model_version, created_at=p.created_at,
-                   notes=p.notes)
+        return cls(
+            id=p.id,
+            equipment_id=p.equipment_id,
+            failure_probability=p.failure_probability,
+            risk_level=p.risk_level.value,
+            horizon_days=p.horizon_days,
+            model_version=p.model_version,
+            created_at=p.created_at,
+            notes=p.notes,
+        )

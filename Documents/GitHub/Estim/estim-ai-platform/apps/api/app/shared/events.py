@@ -80,7 +80,7 @@ class InMemoryEventBus:
             if hasattr(handler, "handle"):
                 handler.handle(event.to_payload())
             else:
-                handler(event.to_payload())  # plain callable
+                handler(event.to_payload())  # type: ignore[operator]  # plain callable
 
 
 @dataclass

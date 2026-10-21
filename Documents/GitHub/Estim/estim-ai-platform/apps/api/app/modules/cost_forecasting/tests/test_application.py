@@ -32,27 +32,31 @@ def _make_forecast(**kw):  # type: ignore[no-untyped-def]
 
     from app.modules.cost_forecasting.domain.entities import CostForecast
 
-    base = dict(
-        id=str(uuid4()), project_id="PROJ-001",
-        forecast_type=ForecastType.PROJECT_TOTAL,
-        status=ForecastStatus.DRAFT,
-        predicted_amount=Decimal("100000.00"),
-        confidence_interval_low=Decimal("90000.00"),
-        confidence_interval_high=Decimal("110000.00"),
-        model_version="v1", created_at=datetime.now(UTC),
-        created_by="user-1",
-    )
+    base = {
+        "id": str(uuid4()),
+        "project_id": "PROJ-001",
+        "forecast_type": ForecastType.PROJECT_TOTAL,
+        "status": ForecastStatus.DRAFT,
+        "predicted_amount": Decimal("100000.00"),
+        "confidence_interval_low": Decimal("90000.00"),
+        "confidence_interval_high": Decimal("110000.00"),
+        "model_version": "v1",
+        "created_at": datetime.now(UTC),
+        "created_by": "user-1",
+    }
     base.update(kw)
     return CostForecast(**base)
 
 
 def _create_payload() -> CostForecastCreate:
     return CostForecastCreate(
-        project_id="PROJ-001", forecast_type=ForecastTypeEnum.PROJECT_TOTAL,
+        project_id="PROJ-001",
+        forecast_type=ForecastTypeEnum.PROJECT_TOTAL,
         predicted_amount=Decimal("100000.00"),
         confidence_interval_low=Decimal("90000.00"),
         confidence_interval_high=Decimal("110000.00"),
-        model_version="v1", created_by="user-1",
+        model_version="v1",
+        created_by="user-1",
     )
 
 
@@ -83,21 +87,15 @@ class TestCostForecastingService:
 
     def test_generate_bad_state(self) -> None:
         svc, repo = self._svc()
-        repo.get_by_id.return_value = _make_forecast(
-            status=ForecastStatus.APPROVED
-        )
+        repo.get_by_id.return_value = _make_forecast(status=ForecastStatus.APPROVED)
         with pytest.raises(InvalidStateError):
             svc.generate_forecast("fid")
 
     def test_approve_reject(self) -> None:
         svc, repo = self._svc()
-        repo.get_by_id.return_value = _make_forecast(
-            status=ForecastStatus.GENERATED
-        )
+        repo.get_by_id.return_value = _make_forecast(status=ForecastStatus.GENERATED)
         assert svc.approve_forecast("f", "mgr").status == ForecastStatus.APPROVED
-        repo.get_by_id.return_value = _make_forecast(
-            status=ForecastStatus.GENERATED
-        )
+        repo.get_by_id.return_value = _make_forecast(status=ForecastStatus.GENERATED)
         assert svc.reject_forecast("f", "mgr").status == ForecastStatus.REJECTED
 
     def test_get_missing(self) -> None:
@@ -109,16 +107,12 @@ class TestCostForecastingService:
     def test_list(self) -> None:
         svc, repo = self._svc()
         repo.list_forecasts.return_value = ([], 0)
-        items, total = svc.list_forecasts(
-            0, 10, CostForecastFilters(project_id="PROJ-001")
-        )
+        items, total = svc.list_forecasts(0, 10, CostForecastFilters(project_id="PROJ-001"))
         assert (items, total) == ([], 0)
 
     def test_record_actual(self) -> None:
         svc, repo = self._svc()
-        repo.get_by_id.return_value = _make_forecast(
-            status=ForecastStatus.GENERATED
-        )
+        repo.get_by_id.return_value = _make_forecast(status=ForecastStatus.GENERATED)
         f = svc.record_actual("f", Decimal("110000.00"))
         assert f.variance == Decimal("10000.00")
 
@@ -145,8 +139,11 @@ class TestSnapshotAndModelServices:
         now = datetime.now(UTC)
         model = svc.create_model(
             ForecastModelCreate(
-                name="lgbm", version="v1", model_type="regressor",
-                training_period_start=now, training_period_end=now,
+                name="lgbm",
+                version="v1",
+                model_type="regressor",
+                training_period_start=now,
+                training_period_end=now,
             )
         )
         assert model.name == "lgbm"

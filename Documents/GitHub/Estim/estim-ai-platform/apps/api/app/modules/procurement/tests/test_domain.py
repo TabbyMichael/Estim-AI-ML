@@ -26,17 +26,17 @@ def _line(material_id="MAT-001", quantity=100, unit_price=1000) -> PurchaseOrder
 
 
 def _po(**kwargs) -> PurchaseOrder:
-    base = dict(
-        id="po-1",
-        po_number="PO-001",
-        supplier_id="SUP-001",
-        project_id="PROJ-001",
-        total_amount=100000,
-        state=OrderState.DRAFT,
-        line_items=[_line()],
-        created_at=None,
-        updated_at=None,
-    )
+    base = {
+        "id": "po-1",
+        "po_number": "PO-001",
+        "supplier_id": "SUP-001",
+        "project_id": "PROJ-001",
+        "total_amount": 100000,
+        "state": OrderState.DRAFT,
+        "line_items": [_line()],
+        "created_at": None,
+        "updated_at": None,
+    }
     base.update(kwargs)
     return PurchaseOrder(**base)
 

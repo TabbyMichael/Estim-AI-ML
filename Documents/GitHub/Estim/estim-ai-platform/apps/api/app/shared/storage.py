@@ -6,7 +6,7 @@ so unit tests don't need network or the dependency.
 """
 
 from dataclasses import dataclass
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 from app.core.config import settings
 
@@ -41,7 +41,7 @@ class StorageClient:
         self.config = config or StorageConfig.from_settings()
         self._client = None
 
-    def _get_client(self):
+    def _get_client(self) -> Any:
         if self._client is None:
             import boto3  # local import: optional dep for unit tests
 
@@ -67,8 +67,9 @@ class StorageClient:
         return buf.getvalue()
 
     def presigned_url(self, key: str, expires_seconds: int = 3600) -> str:
-        return self._get_client().generate_presigned_url(
+        url: str = self._get_client().generate_presigned_url(
             "get_object",
             Params={"Bucket": self.config.bucket, "Key": key},
             ExpiresIn=expires_seconds,
         )
+        return url
