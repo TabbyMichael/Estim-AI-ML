@@ -38,9 +38,7 @@ class CostForecastRepository(Protocol):
         """List cost forecasts with pagination and filters."""
         ...
 
-    def exists_for_project_type(
-        self, project_id: str, forecast_type: str
-    ) -> bool:
+    def exists_for_project_type(self, project_id: str, forecast_type: str) -> bool:
         """Check if a forecast exists for the project and type."""
         ...
 

@@ -21,10 +21,17 @@ class AuditLogResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, log: AuditLog) -> "AuditLogResponse":
-        return cls(id=log.id, actor=log.actor, action=log.action,
-                   resource_type=log.resource_type, resource_id=log.resource_id,
-                   details=log.details, ip_address=log.ip_address,
-                   correlation_id=log.correlation_id, created_at=log.created_at)
+        return cls(
+            id=log.id,
+            actor=log.actor,
+            action=log.action,
+            resource_type=log.resource_type,
+            resource_id=log.resource_id,
+            details=log.details,
+            ip_address=log.ip_address,
+            correlation_id=log.correlation_id,
+            created_at=log.created_at,
+        )
 
 
 class AuditLogListResponse(BaseModel):

@@ -27,10 +27,15 @@ from app.modules.project_risk.ml.prediction import (
 
 def _ms() -> Milestone:
     now = datetime.now(UTC)
-    return Milestone(id=str(uuid4()), project_id="PRJ-1", name="Foundation",
-                     planned_start=now - timedelta(days=30),
-                     planned_end=now - timedelta(days=5),
-                     status=MilestoneStatus.IN_PROGRESS, progress_pct=40.0)
+    return Milestone(
+        id=str(uuid4()),
+        project_id="PRJ-1",
+        name="Foundation",
+        planned_start=now - timedelta(days=30),
+        planned_end=now - timedelta(days=5),
+        status=MilestoneStatus.IN_PROGRESS,
+        progress_pct=40.0,
+    )
 
 
 class TestDomain:
@@ -74,8 +79,9 @@ def client() -> TestClient:
         RiskPredictionModel,
     )
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
@@ -98,14 +104,16 @@ def client() -> TestClient:
 class TestApi:
     def test_milestone_flow(self, client: TestClient) -> None:
         now = datetime.now(UTC).isoformat()
-        reg = client.post("/project-risk/milestones", json={
-            "project_id": "PRJ-9", "name": "Slab",
-            "planned_start": now, "planned_end": now})
+        reg = client.post(
+            "/project-risk/milestones",
+            json={"project_id": "PRJ-9", "name": "Slab", "planned_start": now, "planned_end": now},
+        )
         if reg.status_code != 201:
             pytest.skip(f"router not mounted yet: {reg.text}")
         mid = reg.json()["id"]
-        pred = client.post("/project-risk/projects/PRJ-9/predictions", json={
-            "milestone_id": mid, "delay_probability": 0.6,
-            "predicted_delay_days": 15.0})
+        pred = client.post(
+            "/project-risk/projects/PRJ-9/predictions",
+            json={"milestone_id": mid, "delay_probability": 0.6, "predicted_delay_days": 15.0},
+        )
         assert pred.status_code == 201
         assert pred.json()["risk_level"] == "high"

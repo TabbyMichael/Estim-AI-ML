@@ -31,9 +31,7 @@ def forecast_to_model(forecast: CostForecast) -> CostForecastModel:
         created_at=forecast.created_at,
         created_by=forecast.created_by,
         actual_amount=(
-            float(forecast.actual_amount)
-            if forecast.actual_amount is not None
-            else None
+            float(forecast.actual_amount) if forecast.actual_amount is not None else None
         ),
         variance=float(forecast.variance) if forecast.variance is not None else None,
         accuracy_score=forecast.accuracy_score,
@@ -59,9 +57,7 @@ def model_to_forecast(model: CostForecastModel) -> CostForecast:
         created_at=created_at,
         created_by=model.created_by,
         actual_amount=(
-            Decimal(str(model.actual_amount))
-            if model.actual_amount is not None
-            else None
+            Decimal(str(model.actual_amount)) if model.actual_amount is not None else None
         ),
         variance=Decimal(str(model.variance)) if model.variance is not None else None,
         accuracy_score=model.accuracy_score,
@@ -125,9 +121,9 @@ def model_to_forecast_model(model: ForecastModelModel) -> ForecastModel:
     start = _ensure_tz(model.training_period_start)
     end = _ensure_tz(model.training_period_end)
     created = _ensure_tz(model.created_at)
-    assert start is not None and end is not None and created is not None, (
-        "forecast_models timestamps must not be null"
-    )
+    assert (
+        start is not None and end is not None and created is not None
+    ), "forecast_models timestamps must not be null"
     raw_metrics = model.metrics
     metrics: dict = json.loads(raw_metrics) if isinstance(raw_metrics, str) else {}
     return ForecastModel(

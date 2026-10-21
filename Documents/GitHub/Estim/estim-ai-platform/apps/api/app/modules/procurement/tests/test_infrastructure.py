@@ -45,8 +45,12 @@ def session() -> Iterator[Session]:
     # modules' schema-qualified tables SQLite rejects).
     for table in Base.metadata.tables.values():
         if table.schema == "procurement" or (
-            table.schema is None and table.name in (
-                "purchase_orders", "purchase_order_lines", "anomalies",
+            table.schema is None
+            and table.name
+            in (
+                "purchase_orders",
+                "purchase_order_lines",
+                "anomalies",
             )
         ):
             table.schema = None
@@ -67,34 +71,34 @@ def _line(material_id="MAT-001", quantity=10, unit_price=Decimal("100.00")) -> P
 
 def _po(**kwargs) -> PurchaseOrder:
     now = datetime.now(UTC)
-    base = dict(
-        id=str(uuid.uuid4()),
-        po_number="PO-001",
-        supplier_id="SUP-001",
-        project_id="PROJ-001",
-        total_amount=Decimal("1000.00"),
-        state=OrderState.DRAFT,
-        line_items=[_line()],
-        created_at=now,
-        updated_at=now,
-    )
+    base = {
+        "id": str(uuid.uuid4()),
+        "po_number": "PO-001",
+        "supplier_id": "SUP-001",
+        "project_id": "PROJ-001",
+        "total_amount": Decimal("1000.00"),
+        "state": OrderState.DRAFT,
+        "line_items": [_line()],
+        "created_at": now,
+        "updated_at": now,
+    }
     base.update(kwargs)
     return PurchaseOrder(**base)
 
 
 def _anomaly(**kwargs) -> Anomaly:
     now = datetime.now(UTC)
-    base = dict(
-        id=str(uuid.uuid4()),
-        purchase_order_id="po-1",
-        po_number="PO-001",
-        anomaly_type=AnomalyType.PRICE,
-        anomaly_score=0.93,
-        risk_level=RiskLevel.HIGH,
-        status=AnomalyStatus.PENDING,
-        details={"key": "value"},
-        created_at=now,
-    )
+    base = {
+        "id": str(uuid.uuid4()),
+        "purchase_order_id": "po-1",
+        "po_number": "PO-001",
+        "anomaly_type": AnomalyType.PRICE,
+        "anomaly_score": 0.93,
+        "risk_level": RiskLevel.HIGH,
+        "status": AnomalyStatus.PENDING,
+        "details": {"key": "value"},
+        "created_at": now,
+    }
     base.update(kwargs)
     return Anomaly(**base)
 

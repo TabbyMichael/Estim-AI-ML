@@ -13,11 +13,11 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 
 class ForecastStatus(Enum):
     """Cost forecast status enumeration."""
+
     DRAFT = "draft"
     GENERATED = "generated"
     APPROVED = "approved"
@@ -27,6 +27,7 @@ class ForecastStatus(Enum):
 
 class ForecastType(Enum):
     """Type of cost forecast."""
+
     PROJECT_TOTAL = "project_total"
     PHASE_BREAKDOWN = "phase_breakdown"
     MONTHLY_BURN = "monthly_burn"
@@ -36,6 +37,7 @@ class ForecastType(Enum):
 @dataclass
 class CostSnapshot:
     """Represents a historical cost data point for forecasting."""
+
     id: str
     project_id: str
     category: str
@@ -59,6 +61,7 @@ class CostSnapshot:
 @dataclass
 class CostForecast:
     """Represents a cost forecast for a project."""
+
     id: str
     project_id: str
     forecast_type: ForecastType
@@ -69,12 +72,12 @@ class CostForecast:
     model_version: str
     created_at: datetime
     created_by: str
-    actual_amount: Optional[Decimal] = None
-    variance: Optional[Decimal] = None
-    accuracy_score: Optional[float] = None
-    approved_by: Optional[str] = None
-    approved_at: Optional[datetime] = None
-    notes: Optional[str] = None
+    actual_amount: Decimal | None = None
+    variance: Decimal | None = None
+    accuracy_score: float | None = None
+    approved_by: str | None = None
+    approved_at: datetime | None = None
+    notes: str | None = None
 
     def __post_init__(self) -> None:
         """Validate cost forecast state."""
@@ -89,7 +92,7 @@ class CostForecast:
         if self.confidence_interval_high < self.confidence_interval_low:
             raise ValueError("Confidence interval high must be >= low")
 
-    def approve(self, user_id: str, notes: Optional[str] = None) -> None:
+    def approve(self, user_id: str, notes: str | None = None) -> None:
         """Approve the cost forecast.
 
         Args:
@@ -100,15 +103,13 @@ class CostForecast:
             InvalidStateError: If forecast is not in GENERATED state
         """
         if self.status != ForecastStatus.GENERATED:
-            raise InvalidStateError(
-                f"Cannot approve forecast in {self.status.value} state"
-            )
+            raise InvalidStateError(f"Cannot approve forecast in {self.status.value} state")
         self.status = ForecastStatus.APPROVED
         self.approved_by = user_id
         self.approved_at = datetime.now(UTC)
         self.notes = notes
 
-    def reject(self, user_id: str, notes: Optional[str] = None) -> None:
+    def reject(self, user_id: str, notes: str | None = None) -> None:
         """Reject the cost forecast.
 
         Args:
@@ -119,9 +120,7 @@ class CostForecast:
             InvalidStateError: If forecast is not in GENERATED state
         """
         if self.status != ForecastStatus.GENERATED:
-            raise InvalidStateError(
-                f"Cannot reject forecast in {self.status.value} state"
-            )
+            raise InvalidStateError(f"Cannot reject forecast in {self.status.value} state")
         self.status = ForecastStatus.REJECTED
         self.notes = notes
 
@@ -150,6 +149,7 @@ class CostForecast:
 @dataclass
 class ForecastModel:
     """Represents an ML forecasting model version."""
+
     id: str
     name: str
     version: str
@@ -179,24 +179,29 @@ class ForecastModel:
 
 class InvalidStateError(Exception):
     """Raised when an operation is invalid for the current state."""
+
     pass
 
 
 class ValidationError(Exception):
     """Raised when entity validation fails."""
+
     pass
 
 
 class NotFoundError(Exception):
     """Raised when an entity is not found."""
+
     pass
 
 
 class DuplicateForecastError(Exception):
     """Raised when attempting to create a duplicate forecast."""
+
     pass
 
 
 class ModelNotActiveError(Exception):
     """Raised when attempting to use an inactive forecast model."""
+
     pass

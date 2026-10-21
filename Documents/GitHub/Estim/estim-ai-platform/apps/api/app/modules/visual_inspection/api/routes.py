@@ -36,21 +36,21 @@ def _service(db: Session = Depends(get_db)) -> VisualInspectionService:
     )
 
 
-@router.post("/inspections", response_model=InspectionResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post("/inspections", response_model=InspectionResponse, status_code=status.HTTP_201_CREATED)
 def create_inspection(
-    body: InspectionCreate, svc: VisualInspectionService = Depends(_service),
+    body: InspectionCreate,
+    svc: VisualInspectionService = Depends(_service),
     db: Session = Depends(get_db),
 ) -> InspectionResponse:
-    insp = svc.create_inspection(body.project_id, body.title, body.site_id,
-                                 body.created_by)
+    insp = svc.create_inspection(body.project_id, body.title, body.site_id, body.created_by)
     db.commit()
     return InspectionResponse.from_entity(insp)
 
 
 @router.get("/inspections", response_model=InspectionListResponse)
 def list_inspections(
-    skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
     project_id: str | None = Query(None),
     svc: VisualInspectionService = Depends(_service),
 ) -> InspectionListResponse:
@@ -58,43 +58,55 @@ def list_inspections(
     items, total = svc.list_inspections(skip, limit, filters)
     return InspectionListResponse(
         inspections=[InspectionResponse.from_entity(i) for i in items],
-        total=total, skip=skip, limit=limit)
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
-@router.post("/inspections/{inspection_id}/images",
-             response_model=ImageResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/inspections/{inspection_id}/images",
+    response_model=ImageResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def attach_image(
-    inspection_id: str, body: ImageAttachRequest,
+    inspection_id: str,
+    body: ImageAttachRequest,
     svc: VisualInspectionService = Depends(_service),
     db: Session = Depends(get_db),
 ) -> ImageResponse:
     try:
-        img = svc.attach_image(inspection_id, body.storage_key, body.filename,
-                               body.content_type, body.size_bytes)
+        img = svc.attach_image(
+            inspection_id, body.storage_key, body.filename, body.content_type, body.size_bytes
+        )
     except domain_errors.NotFoundError as exc:
         raise CoreNotFound(str(exc)) from exc
     db.commit()
     return ImageResponse.from_entity(img)
 
 
-@router.post("/inspections/{inspection_id}/detections",
-             response_model=DetectionResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/inspections/{inspection_id}/detections",
+    response_model=DetectionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def record_detection(
-    inspection_id: str, body: DetectionCreate,
+    inspection_id: str,
+    body: DetectionCreate,
     svc: VisualInspectionService = Depends(_service),
     db: Session = Depends(get_db),
 ) -> DetectionResponse:
-    det = svc.record_detection(inspection_id, body.image_id,
-                               body.defect_type, body.confidence, body.bbox)
+    det = svc.record_detection(
+        inspection_id, body.image_id, body.defect_type, body.confidence, body.bbox
+    )
     db.commit()
     return DetectionResponse.from_entity(det)
 
 
 @router.get("/inspections/{inspection_id}/summary")
 def review_summary(
-    inspection_id: str, svc: VisualInspectionService = Depends(_service),
+    inspection_id: str,
+    svc: VisualInspectionService = Depends(_service),
 ) -> dict:
     try:
         return svc.review_summary(inspection_id)

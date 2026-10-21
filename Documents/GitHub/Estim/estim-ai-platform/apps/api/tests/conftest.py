@@ -1,8 +1,10 @@
 """Pytest configuration and fixtures."""
+
+from unittest.mock import patch
+
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from unittest.mock import patch
+from sqlalchemy.orm import sessionmaker
 
 # Use SQLite for tests
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -29,7 +31,7 @@ def test_db(test_engine):
 @pytest.fixture
 def mock_settings():
     """Mock settings to use SQLite for tests."""
-    with patch('app.core.database.settings') as mock:
+    with patch("app.core.database.settings") as mock:
         mock.database_url = TEST_DATABASE_URL
         mock.database_pool_size = 5
         mock.database_max_overflow = 2

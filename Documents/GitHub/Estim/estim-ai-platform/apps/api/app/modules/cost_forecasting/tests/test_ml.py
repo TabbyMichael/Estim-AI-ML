@@ -17,21 +17,28 @@ from app.modules.cost_forecasting.ml.inference import LightGBMForecaster
 
 def _forecast() -> CostForecast:
     return CostForecast(
-        id=str(uuid4()), project_id="P", forecast_type=ForecastType.PROJECT_TOTAL,
-        status=ForecastStatus.DRAFT, predicted_amount=Decimal("100"),
+        id=str(uuid4()),
+        project_id="P",
+        forecast_type=ForecastType.PROJECT_TOTAL,
+        status=ForecastStatus.DRAFT,
+        predicted_amount=Decimal("100"),
         confidence_interval_low=Decimal("90"),
         confidence_interval_high=Decimal("110"),
-        model_version="v1", created_at=datetime.now(UTC), created_by="u",
+        model_version="v1",
+        created_at=datetime.now(UTC),
+        created_by="u",
     )
 
 
 def _snaps() -> list[CostSnapshot]:
     now = datetime.now(UTC)
     return [
-        CostSnapshot(id=str(uuid4()), project_id="P", category="m",
-                     amount=Decimal("40"), recorded_at=now),
-        CostSnapshot(id=str(uuid4()), project_id="P", category="l",
-                     amount=Decimal("60"), recorded_at=now),
+        CostSnapshot(
+            id=str(uuid4()), project_id="P", category="m", amount=Decimal("40"), recorded_at=now
+        ),
+        CostSnapshot(
+            id=str(uuid4()), project_id="P", category="l", amount=Decimal("60"), recorded_at=now
+        ),
     ]
 
 

@@ -20,12 +20,12 @@ def risk_from_probability(p: float) -> RiskLevel:
 
 
 def needs_maintenance(equipment: Equipment, hours_threshold: float = 500.0) -> bool:
-    return (equipment.operating_hours >= hours_threshold
-            or equipment.status == EquipmentStatus.DEGRADED)
+    return (
+        equipment.operating_hours >= hours_threshold or equipment.status == EquipmentStatus.DEGRADED
+    )
 
 
-def mtbf_hours(records: list[MaintenanceRecord],
-               total_hours: float) -> float:
+def mtbf_hours(records: list[MaintenanceRecord], total_hours: float) -> float:
     failures = [r for r in records if r.downtime_hours > 0]
     if not failures:
         return total_hours

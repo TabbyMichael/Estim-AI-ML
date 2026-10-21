@@ -10,7 +10,6 @@ This module defines the data models used for:
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -68,19 +67,17 @@ class CostForecastCreate(BaseModel):
 class CostForecastUpdate(BaseModel):
     """Schema for updating a cost forecast."""
 
-    predicted_amount: Optional[Decimal] = Field(
+    predicted_amount: Decimal | None = Field(
         None, description="Predicted cost amount", ge=0, decimal_places=2
     )
-    confidence_interval_low: Optional[Decimal] = Field(
+    confidence_interval_low: Decimal | None = Field(
         None, description="Lower bound of confidence interval", ge=0, decimal_places=2
     )
-    confidence_interval_high: Optional[Decimal] = Field(
+    confidence_interval_high: Decimal | None = Field(
         None, description="Upper bound of confidence interval", ge=0, decimal_places=2
     )
-    model_version: Optional[str] = Field(
-        None, description="Forecast model version", min_length=1
-    )
-    notes: Optional[str] = Field(None, description="Additional notes")
+    model_version: str | None = Field(None, description="Forecast model version", min_length=1)
+    notes: str | None = Field(None, description="Additional notes")
 
 
 class CostForecastResponse(BaseModel):
@@ -96,12 +93,12 @@ class CostForecastResponse(BaseModel):
     model_version: str
     created_at: datetime
     created_by: str
-    actual_amount: Optional[Decimal] = None
-    variance: Optional[Decimal] = None
-    accuracy_score: Optional[float] = None
-    approved_by: Optional[str] = None
-    approved_at: Optional[datetime] = None
-    notes: Optional[str] = None
+    actual_amount: Decimal | None = None
+    variance: Decimal | None = None
+    accuracy_score: float | None = None
+    approved_by: str | None = None
+    approved_at: datetime | None = None
+    notes: str | None = None
 
     @classmethod
     def from_entity(cls, forecast: CostForecast) -> "CostForecastResponse":
@@ -137,9 +134,9 @@ class CostForecastListResponse(BaseModel):
 class CostForecastFilters(BaseModel):
     """Schema for filtering cost forecasts."""
 
-    project_id: Optional[str] = Field(None, description="Filter by project ID")
-    forecast_type: Optional[ForecastTypeEnum] = Field(None, description="Filter by forecast type")
-    status: Optional[ForecastStatusEnum] = Field(None, description="Filter by forecast status")
+    project_id: str | None = Field(None, description="Filter by project ID")
+    forecast_type: ForecastTypeEnum | None = Field(None, description="Filter by forecast type")
+    status: ForecastStatusEnum | None = Field(None, description="Filter by forecast status")
 
 
 class CostSnapshotCreate(BaseModel):
@@ -148,7 +145,7 @@ class CostSnapshotCreate(BaseModel):
     project_id: str = Field(..., description="Project identifier", min_length=1)
     category: str = Field(..., description="Cost category", min_length=1)
     amount: Decimal = Field(..., description="Cost amount", ge=0, decimal_places=2)
-    recorded_at: Optional[datetime] = Field(None, description="When the cost was recorded")
+    recorded_at: datetime | None = Field(None, description="When the cost was recorded")
     currency: str = Field("USD", description="Currency code", min_length=1, max_length=10)
     metadata: dict = Field(default_factory=dict, description="Additional metadata")
 
@@ -246,7 +243,7 @@ class ApproveForecastRequest(BaseModel):
 
     forecast_id: str = Field(..., description="Forecast ID to approve")
     approved_by: str = Field(..., description="User ID of approver", min_length=1)
-    notes: Optional[str] = Field(None, description="Approval notes")
+    notes: str | None = Field(None, description="Approval notes")
 
 
 class RejectForecastRequest(BaseModel):
@@ -254,7 +251,7 @@ class RejectForecastRequest(BaseModel):
 
     forecast_id: str = Field(..., description="Forecast ID to reject")
     rejected_by: str = Field(..., description="User ID of rejecter", min_length=1)
-    notes: Optional[str] = Field(None, description="Rejection notes")
+    notes: str | None = Field(None, description="Rejection notes")
 
 
 class RecordActualRequest(BaseModel):

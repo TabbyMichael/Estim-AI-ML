@@ -36,7 +36,7 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def init_db():
+def init_db() -> None:
     """
     Initialize database tables.
 

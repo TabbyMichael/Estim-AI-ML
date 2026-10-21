@@ -51,9 +51,7 @@ class CostForecastingService:
         self.models = models
 
     def create_forecast(self, request: CostForecastCreate) -> CostForecast:
-        if self.forecasts.exists_for_project_type(
-            request.project_id, request.forecast_type.value
-        ):
+        if self.forecasts.exists_for_project_type(request.project_id, request.forecast_type.value):
             raise DuplicateForecastError(
                 f"Forecast already exists for project {request.project_id} "
                 f"type {request.forecast_type.value}"
@@ -85,9 +83,7 @@ class CostForecastingService:
             filters=filters.model_dump(exclude_none=True),
         )
 
-    def update_forecast(
-        self, forecast_id: str, request: CostForecastUpdate
-    ) -> CostForecast:
+    def update_forecast(self, forecast_id: str, request: CostForecastUpdate) -> CostForecast:
         forecast = self.forecasts.get_by_id(forecast_id)
         if request.predicted_amount is not None:
             forecast.predicted_amount = request.predicted_amount
@@ -115,9 +111,7 @@ class CostForecastingService:
     ) -> CostForecast:
         forecast = self.forecasts.get_by_id(forecast_id)
         if not rules.can_approve_forecast(forecast):
-            raise InvalidStateError(
-                f"Forecast cannot be approved in {forecast.status.value} state"
-            )
+            raise InvalidStateError(f"Forecast cannot be approved in {forecast.status.value} state")
         forecast.approve(user_id, notes=notes)
         return self.forecasts.save(forecast)
 
@@ -126,9 +120,7 @@ class CostForecastingService:
     ) -> CostForecast:
         forecast = self.forecasts.get_by_id(forecast_id)
         if not rules.can_reject_forecast(forecast):
-            raise InvalidStateError(
-                f"Forecast cannot be rejected in {forecast.status.value} state"
-            )
+            raise InvalidStateError(f"Forecast cannot be rejected in {forecast.status.value} state")
         forecast.reject(user_id, notes=notes)
         return self.forecasts.save(forecast)
 
@@ -137,9 +129,7 @@ class CostForecastingService:
         forecast.mark_superseded()
         return self.forecasts.save(forecast)
 
-    def record_actual(
-        self, forecast_id: str, actual_amount: Decimal
-    ) -> CostForecast:
+    def record_actual(self, forecast_id: str, actual_amount: Decimal) -> CostForecast:
         forecast = self.forecasts.get_by_id(forecast_id)
         forecast.record_actual(actual_amount)
         return self.forecasts.save(forecast)
@@ -168,9 +158,7 @@ class CostSnapshotService:
     def list_snapshots(
         self, skip: int, limit: int, filters: dict | None = None
     ) -> tuple[list[CostSnapshot], int]:
-        return self.snapshots.list_snapshots(
-            skip=skip, limit=limit, filters=filters or {}
-        )
+        return self.snapshots.list_snapshots(skip=skip, limit=limit, filters=filters or {})
 
 
 class ForecastModelService:
@@ -198,9 +186,7 @@ class ForecastModelService:
     def get_active_model(self) -> ForecastModel | None:
         return self.models.get_active()
 
-    def list_models(
-        self, skip: int = 0, limit: int = 100
-    ) -> tuple[list[ForecastModel], int]:
+    def list_models(self, skip: int = 0, limit: int = 100) -> tuple[list[ForecastModel], int]:
         return self.models.list_models(skip=skip, limit=limit)
 
     def activate_model(self, model_id: str) -> ForecastModel:

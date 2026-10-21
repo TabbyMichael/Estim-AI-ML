@@ -5,11 +5,12 @@ and provides the OpenAPI surface (Phase 2.4). Module routers
 (procurement, identity, ...) mount here in Phase 3+.
 """
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.bootstrap import register_dependencies
 from app.core import logging as estim_logging
+from app.core import realtime
 from app.core.config import settings
 from app.core.metrics import metrics_response
 from app.core.middleware import register_handlers, register_middleware
@@ -42,8 +43,7 @@ app = FastAPI(
         {"name": "inventory", "description": "Inventory intelligence (Phase 5.2)."},
         {"name": "maintenance", "description": "Maintenance intelligence (Phase 5.3)."},
         {"name": "project-risk", "description": "Project risk intelligence (Phase 5.4)."},
-        {"name": "visual-inspection",
-         "description": "Visual inspection (Phase 5.5)."},
+        {"name": "visual-inspection", "description": "Visual inspection (Phase 5.5)."},
         {"name": "documents", "description": "Document intelligence (Phase 5.6)."},
         {"name": "notifications", "description": "Notifications (Phase 6.1)."},
         {"name": "reports", "description": "Reporting (Phase 6.2)."},
@@ -62,6 +62,13 @@ register_middleware(app)
 register_handlers(app)
 register_dependencies()
 register_audit_middleware(app)
+
+
+@app.on_event("startup")
+async def _capture_event_loop() -> None:
+    """Record the main loop so sync code can publish realtime frames."""
+    realtime.capture_loop()
+
 
 app.include_router(identity_router)
 app.include_router(procurement_router)
@@ -89,6 +96,21 @@ def metrics() -> Response:
     """Prometheus metrics endpoint scraped by the Prometheus server."""
     body, headers = metrics_response()
     return Response(content=body, media_type=headers["Content-Type"])
+
+
+@app.websocket("/ws")
+async def websocket_route(websocket: WebSocket) -> None:
+    """Realtime WebSocket (Roadmap 1.2): /ws?token=<access_token>."""
+    await realtime.websocket_endpoint(websocket)
+
+
+@app.get("/realtime/status", tags=["platform"])
+def realtime_status() -> dict:
+    """Connection count + channel membership for ops dashboards."""
+    return {
+        "connections": realtime.manager.connection_count,
+        "channels": realtime.manager.channels(),
+    }
 
 
 @app.get("/", tags=["platform"])

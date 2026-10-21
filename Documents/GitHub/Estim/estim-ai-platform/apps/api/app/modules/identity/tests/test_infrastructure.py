@@ -36,8 +36,13 @@ def session() -> Iterator[Session]:
     # modules' schema-qualified tables SQLite rejects).
     for table in Base.metadata.tables.values():
         if table.schema == "identity" or (
-            table.schema is None and table.name in (
-                "users", "roles", "permissions", "role_permissions",
+            table.schema is None
+            and table.name
+            in (
+                "users",
+                "roles",
+                "permissions",
+                "role_permissions",
                 "user_roles",
             )
         ):

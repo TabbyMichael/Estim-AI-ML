@@ -62,3 +62,50 @@ class TokenResponse(BaseModel):
 class AccessTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class RoleResponse(BaseModel):
+    name: str
+    description: str = ""
+    permissions: list[str] = []
+
+
+class PermissionResponse(BaseModel):
+    code: str
+    description: str = ""
+
+
+class AdminUserCreateRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=72)
+    full_name: str = Field(default="", max_length=255)
+    roles: list[str] = Field(default_factory=list)
+
+
+class AdminUserUpdateRequest(BaseModel):
+    full_name: str | None = Field(default=None, max_length=255)
+    roles: list[str] | None = None
+    is_active: bool | None = None
+
+
+class RoleAssignRequest(BaseModel):
+    role: str = Field(..., min_length=1, max_length=100)
+
+
+class PermissionGrantRequest(BaseModel):
+    permission: str = Field(..., min_length=1, max_length=150)
+
+
+class UserListResponse(BaseModel):
+    users: list[UserResponse]
+    total: int
+    skip: int
+    limit: int
+
+
+class UserActivityResponse(BaseModel):
+    user_id: str
+    email: str
+    last_login_at: datetime | None = None
+    is_active: bool
+    roles: list[str]

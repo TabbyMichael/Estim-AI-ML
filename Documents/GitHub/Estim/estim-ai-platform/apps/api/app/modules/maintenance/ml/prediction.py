@@ -6,8 +6,7 @@ from app.modules.maintenance.domain import rules
 from app.modules.maintenance.domain.entities import Equipment, MaintenanceRecord
 from app.shared.ml_base import EvaluationResult
 
-FEATURE_NAMES = ["operating_hours", "downtime_total", "record_count",
-                 "mtbf_hours", "is_degraded"]
+FEATURE_NAMES = ["operating_hours", "downtime_total", "record_count", "mtbf_hours", "is_degraded"]
 
 MODEL_NAME = "failure_predictor"
 MODEL_VERSION = "v1"
@@ -18,8 +17,13 @@ def extract_maintenance_features(
 ) -> list[float]:
     downtime = sum(r.downtime_hours for r in history)
     mtbf = rules.mtbf_hours(history, equipment.operating_hours)
-    return [equipment.operating_hours, downtime, float(len(history)), mtbf,
-            1.0 if equipment.status.value == "degraded" else 0.0]
+    return [
+        equipment.operating_hours,
+        downtime,
+        float(len(history)),
+        mtbf,
+        1.0 if equipment.status.value == "degraded" else 0.0,
+    ]
 
 
 class FailurePredictor:
@@ -33,9 +37,7 @@ class FailurePredictor:
     def attach_booster(self, booster: object) -> None:
         self._booster = booster
 
-    def predict(
-        self, equipment: Equipment, history: list[MaintenanceRecord]
-    ) -> dict:
+    def predict(self, equipment: Equipment, history: list[MaintenanceRecord]) -> dict:
         features = extract_maintenance_features(equipment, history)
         if self._booster is not None:
             try:
@@ -45,8 +47,7 @@ class FailurePredictor:
         else:
             prob = self._heuristic(features)
         prob = min(1.0, max(0.0, prob))
-        return {"failure_probability": prob,
-                "risk_level": rules.risk_from_probability(prob).value}
+        return {"failure_probability": prob, "risk_level": rules.risk_from_probability(prob).value}
 
     def _heuristic(self, features: list[float]) -> float:
         hours, downtime, count, _mtbf, degraded = features
@@ -57,15 +58,17 @@ class FailurePredictor:
         return float(self.predict(item[0], item[1])["failure_probability"])
 
     def health(self) -> dict:
-        return {"model_name": self.model_name,
-                "model_version": self.model_version,
-                "backend": "lightgbm" if self._booster else "heuristic",
-                "ready": True}
+        return {
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "backend": "lightgbm" if self._booster else "heuristic",
+            "ready": True,
+        }
 
 
 def evaluate_failures(actual: list[int], scores: list[float]) -> EvaluationResult:
-    correct = sum(1 for a, s in zip(actual, scores, strict=False)
-                  if (s >= 0.5) == bool(a))
+    correct = sum(1 for a, s in zip(actual, scores, strict=False) if (s >= 0.5) == bool(a))
     acc = correct / len(actual) if actual else 0.0
-    return EvaluationResult(model_name=MODEL_NAME, model_version=MODEL_VERSION,
-                            metrics={"accuracy": acc})
+    return EvaluationResult(
+        model_name=MODEL_NAME, model_version=MODEL_VERSION, metrics={"accuracy": acc}
+    )

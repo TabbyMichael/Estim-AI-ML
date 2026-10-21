@@ -115,13 +115,14 @@ export default function Home() {
   ]
 
   return (
+    <>
     <div className="page-header">
       <div className="animate-fade-in">
         <h1 className="text-gradient" style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
           Welcome back, Ian
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '0.25rem' }}>
-          Here's what's happening with your construction projects today.
+          Here&apos;s what&apos;s happening with your construction projects today.
         </p>
       </div>
     </div>
@@ -207,5 +208,6 @@ export default function Home() {
         ))}
       </div>
     </div>
+    </>
   )
 }

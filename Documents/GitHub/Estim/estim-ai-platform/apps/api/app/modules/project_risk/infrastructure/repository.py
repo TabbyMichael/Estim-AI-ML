@@ -33,8 +33,7 @@ class SqlAlchemyMilestoneRepository:
         return mappers.model_to_milestone(merged)
 
     def list_for_project(self, project_id: str) -> list[Milestone]:
-        stmt = select(MilestoneModel).where(
-            MilestoneModel.project_id == project_id)
+        stmt = select(MilestoneModel).where(MilestoneModel.project_id == project_id)
         rows = self.session.execute(stmt).scalars().all()
         return [mappers.model_to_milestone(r) for r in rows]
 
@@ -51,10 +50,10 @@ class SqlAlchemyRiskPredictionRepository:
     def list_for_project(
         self, project_id: str, skip: int = 0, limit: int = 100
     ) -> tuple[list[RiskPrediction], int]:
-        stmt = select(RiskPredictionModel).where(
-            RiskPredictionModel.project_id == project_id)
+        stmt = select(RiskPredictionModel).where(RiskPredictionModel.project_id == project_id)
         count_stmt = select(func.count(RiskPredictionModel.id)).where(
-            RiskPredictionModel.project_id == project_id)
+            RiskPredictionModel.project_id == project_id
+        )
         total = self.session.execute(count_stmt).scalar_one()
         rows = self.session.execute(stmt.offset(skip).limit(limit)).scalars()
         return [mappers.model_to_prediction(r) for r in rows], total

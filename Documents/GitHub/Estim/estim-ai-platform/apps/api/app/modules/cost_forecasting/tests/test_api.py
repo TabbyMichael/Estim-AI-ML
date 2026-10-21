@@ -94,15 +94,11 @@ class TestForecastApi:
         assert listed.json()["total"] >= 1
 
     def test_get_missing(self, client: TestClient) -> None:
-        resp = client.get(
-            "/cost-forecasting/forecasts/00000000-0000-0000-0000-000000000000"
-        )
+        resp = client.get("/cost-forecasting/forecasts/00000000-0000-0000-0000-000000000000")
         assert resp.status_code == 404
 
     def test_reject_flow(self, client: TestClient) -> None:
-        created = client.post(
-            "/cost-forecasting/forecasts", json=_payload("PROJ-REJ")
-        )
+        created = client.post("/cost-forecasting/forecasts", json=_payload("PROJ-REJ"))
         fid = created.json()["id"]
         client.post(f"/cost-forecasting/forecasts/{fid}/generate")
         rej = client.post(
@@ -125,7 +121,9 @@ class TestForecastApi:
         model = client.post(
             "/cost-forecasting/models",
             json={
-                "name": "lgbm", "version": "v1", "model_type": "regressor",
+                "name": "lgbm",
+                "version": "v1",
+                "model_type": "regressor",
                 "training_period_start": "2024-01-01T00:00:00Z",
                 "training_period_end": "2024-06-01T00:00:00Z",
             },

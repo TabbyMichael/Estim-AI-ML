@@ -38,8 +38,8 @@ class ProviderRegistry:
         provider = self._providers.get(report_type)
         if provider is None:
             raise UnknownReportTypeError(
-                f"No provider registered for '{report_type}'. "
-                f"Known: {sorted(self._providers)}")
+                f"No provider registered for '{report_type}'. " f"Known: {sorted(self._providers)}"
+            )
         return provider
 
     def types(self) -> list[str]:
@@ -50,19 +50,27 @@ registry = ProviderRegistry()
 
 
 class ReportService:
-    def __init__(self, reports: ReportRepository,
-                 providers: ProviderRegistry | None = None) -> None:
+    def __init__(
+        self, reports: ReportRepository, providers: ProviderRegistry | None = None
+    ) -> None:
         self.reports = reports
         self.providers = providers or registry
 
     def generate(
-        self, report_type: str, filters: dict[str, Any] | None = None,
-        fmt: ReportFormat = ReportFormat.MARKDOWN, generated_by: str = "system",
+        self,
+        report_type: str,
+        filters: dict[str, Any] | None = None,
+        fmt: ReportFormat = ReportFormat.MARKDOWN,
+        generated_by: str = "system",
     ) -> Report:
         report = Report(
-            id=str(uuid.uuid4()), report_type=report_type,
-            title=rules.title_for(report_type), status=ReportStatus.PENDING,
-            format=fmt, generated_by=generated_by)
+            id=str(uuid.uuid4()),
+            report_type=report_type,
+            title=rules.title_for(report_type),
+            status=ReportStatus.PENDING,
+            format=fmt,
+            generated_by=generated_by,
+        )
         report = self.reports.save(report)
         try:
             payload = self.providers.get(report_type)(filters or {})
@@ -86,19 +94,23 @@ class ReportService:
 
 
 class ScheduleService:
-    def __init__(self, schedules: ScheduleRepository,
-                 reports: ReportService | None = None) -> None:
+    def __init__(self, schedules: ScheduleRepository, reports: ReportService | None = None) -> None:
         self.schedules = schedules
         self.reports = reports
 
     def create_schedule(
-        self, report_type: str, interval: str = "daily",
+        self,
+        report_type: str,
+        interval: str = "daily",
         created_by: str = "system",
     ) -> ReportSchedule:
         schedule = ReportSchedule(
-            id=str(uuid.uuid4()), report_type=report_type,
-            interval=interval, created_by=created_by,
-            next_run_at=rules.next_run(interval))
+            id=str(uuid.uuid4()),
+            report_type=report_type,
+            interval=interval,
+            created_by=created_by,
+            next_run_at=rules.next_run(interval),
+        )
         return self.schedules.save(schedule)
 
     def list_schedules(self) -> list[ReportSchedule]:
@@ -112,10 +124,10 @@ class ScheduleService:
         ref = now or datetime.now(UTC)
         for schedule in self.schedules.list_schedules():
             if not schedule.enabled or not rules.is_due(
-                schedule.last_run_at, schedule.interval, ref):
+                schedule.last_run_at, schedule.interval, ref
+            ):
                 continue
-            report = self.reports.generate(
-                schedule.report_type, generated_by="scheduler")
+            report = self.reports.generate(schedule.report_type, generated_by="scheduler")
             schedule.last_run_at = ref
             schedule.next_run_at = rules.next_run(schedule.interval, ref)
             self.schedules.save(schedule)

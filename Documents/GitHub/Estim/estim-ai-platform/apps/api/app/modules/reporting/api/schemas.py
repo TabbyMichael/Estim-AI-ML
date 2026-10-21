@@ -35,10 +35,17 @@ class ReportResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, r: Report) -> "ReportResponse":
-        return cls(id=r.id, report_type=r.report_type, title=r.title,
-                   status=r.status.value, format=r.format.value,
-                   content=r.content, generated_by=r.generated_by,
-                   created_at=r.created_at, error=r.error)
+        return cls(
+            id=r.id,
+            report_type=r.report_type,
+            title=r.title,
+            status=r.status.value,
+            format=r.format.value,
+            content=r.content,
+            generated_by=r.generated_by,
+            created_at=r.created_at,
+            error=r.error,
+        )
 
 
 class ReportListResponse(BaseModel):
@@ -65,6 +72,12 @@ class ScheduleResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, s: ReportSchedule) -> "ScheduleResponse":
-        return cls(id=s.id, report_type=s.report_type, interval=s.interval,
-                   enabled=s.enabled, created_by=s.created_by,
-                   created_at=s.created_at, next_run_at=s.next_run_at)
+        return cls(
+            id=s.id,
+            report_type=s.report_type,
+            interval=s.interval,
+            enabled=s.enabled,
+            created_by=s.created_by,
+            created_at=s.created_at,
+            next_run_at=s.next_run_at,
+        )

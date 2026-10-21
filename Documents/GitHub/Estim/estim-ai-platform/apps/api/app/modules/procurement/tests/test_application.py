@@ -46,8 +46,12 @@ def session() -> Iterator[Session]:
 
     for table in Base.metadata.tables.values():
         if table.schema == "procurement" or (
-            table.schema is None and table.name in (
-                "purchase_orders", "purchase_order_lines", "anomalies",
+            table.schema is None
+            and table.name
+            in (
+                "purchase_orders",
+                "purchase_order_lines",
+                "anomalies",
             )
         ):
             table.schema = None

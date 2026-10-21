@@ -63,7 +63,8 @@ def _translate(exc: Exception) -> Exception:
 
 
 @router.post(
-    "/forecasts", response_model=CostForecastResponse,
+    "/forecasts",
+    response_model=CostForecastResponse,
     status_code=status.HTTP_201_CREATED,
 )
 def create_forecast(
@@ -89,12 +90,16 @@ def list_forecasts(
     svc: CostForecastingService = Depends(_forecast_service),
 ) -> CostForecastListResponse:
     filters = CostForecastFilters(
-        project_id=project_id, forecast_type=forecast_type, status=status_filter,
+        project_id=project_id,
+        forecast_type=forecast_type,
+        status=status_filter,
     )
     forecasts, total = svc.list_forecasts(skip=skip, limit=limit, filters=filters)
     return CostForecastListResponse(
         forecasts=[CostForecastResponse.from_entity(f) for f in forecasts],
-        total=total, skip=skip, limit=limit,
+        total=total,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -107,6 +112,7 @@ def get_forecast(
         return CostForecastResponse.from_entity(svc.get_forecast(forecast_id))
     except Exception as exc:  # noqa: BLE001
         raise _translate(exc) from exc
+
 
 @router.put("/forecasts/{forecast_id}", response_model=CostForecastResponse)
 def update_forecast(
@@ -168,6 +174,7 @@ def reject_forecast(
     db.commit()
     return CostForecastResponse.from_entity(forecast)
 
+
 @router.post("/forecasts/{forecast_id}/supersede", response_model=CostForecastResponse)
 def supersede_forecast(
     forecast_id: str,
@@ -198,7 +205,8 @@ def record_actual(
 
 
 @router.post(
-    "/snapshots", response_model=CostSnapshotResponse,
+    "/snapshots",
+    response_model=CostSnapshotResponse,
     status_code=status.HTTP_201_CREATED,
 )
 def create_snapshot(
@@ -227,7 +235,9 @@ def list_snapshots(
     snapshots, total = svc.list_snapshots(skip=skip, limit=limit, filters=filters)
     return CostSnapshotListResponse(
         snapshots=[CostSnapshotResponse.from_entity(s) for s in snapshots],
-        total=total, skip=skip, limit=limit,
+        total=total,
+        skip=skip,
+        limit=limit,
     )
 
 
@@ -243,7 +253,8 @@ def get_snapshot(
 
 
 @router.post(
-    "/models", response_model=ForecastModelResponse,
+    "/models",
+    response_model=ForecastModelResponse,
     status_code=status.HTTP_201_CREATED,
 )
 def create_model(
@@ -265,7 +276,9 @@ def list_models(
     models, total = svc.list_models(skip=skip, limit=limit)
     return ForecastModelListResponse(
         models=[ForecastModelResponse.from_entity(m) for m in models],
-        total=total, skip=skip, limit=limit,
+        total=total,
+        skip=skip,
+        limit=limit,
     )
 
 

@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -14,7 +13,7 @@ class StockSnapshotCreate(BaseModel):
     site_id: str = Field(..., min_length=1)
     quantity_on_hand: Decimal = Field(..., ge=0)
     unit: str = Field("units")
-    recorded_at: Optional[datetime] = None
+    recorded_at: datetime | None = None
     reorder_point: Decimal = Field(Decimal("0"), ge=0)
     metadata: dict = Field(default_factory=dict)
 
@@ -31,10 +30,16 @@ class StockSnapshotResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, s: StockSnapshot) -> "StockSnapshotResponse":
-        return cls(id=s.id, material_id=s.material_id, site_id=s.site_id,
-                   quantity_on_hand=s.quantity_on_hand, unit=s.unit,
-                   recorded_at=s.recorded_at, reorder_point=s.reorder_point,
-                   metadata=s.metadata)
+        return cls(
+            id=s.id,
+            material_id=s.material_id,
+            site_id=s.site_id,
+            quantity_on_hand=s.quantity_on_hand,
+            unit=s.unit,
+            recorded_at=s.recorded_at,
+            reorder_point=s.reorder_point,
+            metadata=s.metadata,
+        )
 
 
 class StockSnapshotListResponse(BaseModel):
@@ -69,19 +74,27 @@ class DemandForecastResponse(BaseModel):
     model_version: str
     created_at: datetime
     created_by: str
-    approved_by: Optional[str] = None
-    notes: Optional[str] = None
+    approved_by: str | None = None
+    notes: str | None = None
 
     @classmethod
     def from_entity(cls, f: DemandForecast) -> "DemandForecastResponse":
-        return cls(id=f.id, material_id=f.material_id, site_id=f.site_id,
-                   forecast_type=f.forecast_type, status=f.status.value,
-                   predicted_quantity=f.predicted_quantity,
-                   confidence_low=f.confidence_low,
-                   confidence_high=f.confidence_high,
-                   horizon_days=f.horizon_days, model_version=f.model_version,
-                   created_at=f.created_at, created_by=f.created_by,
-                   approved_by=f.approved_by, notes=f.notes)
+        return cls(
+            id=f.id,
+            material_id=f.material_id,
+            site_id=f.site_id,
+            forecast_type=f.forecast_type,
+            status=f.status.value,
+            predicted_quantity=f.predicted_quantity,
+            confidence_low=f.confidence_low,
+            confidence_high=f.confidence_high,
+            horizon_days=f.horizon_days,
+            model_version=f.model_version,
+            created_at=f.created_at,
+            created_by=f.created_by,
+            approved_by=f.approved_by,
+            notes=f.notes,
+        )
 
 
 class DemandForecastListResponse(BaseModel):
@@ -92,6 +105,6 @@ class DemandForecastListResponse(BaseModel):
 
 
 class DemandForecastFilters(BaseModel):
-    material_id: Optional[str] = None
-    site_id: Optional[str] = None
-    status: Optional[str] = None
+    material_id: str | None = None
+    site_id: str | None = None
+    status: str | None = None

@@ -28,10 +28,17 @@ def client():
         dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
     identity_tables = [
-        t for t in Base.metadata.tables.values()
-        if t.schema == "identity" or (
-            t.schema is None and t.name in (
-                "users", "roles", "permissions", "role_permissions",
+        t
+        for t in Base.metadata.tables.values()
+        if t.schema == "identity"
+        or (
+            t.schema is None
+            and t.name
+            in (
+                "users",
+                "roles",
+                "permissions",
+                "role_permissions",
                 "user_roles",
             )
         )

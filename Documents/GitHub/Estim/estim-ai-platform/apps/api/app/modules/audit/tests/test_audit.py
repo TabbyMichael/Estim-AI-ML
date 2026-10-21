@@ -31,12 +31,22 @@ class TestRules:
 
     def test_summarize(self) -> None:
         logs = [
-            AuditLog(id="1", actor="a", action="http_post",
-                     resource_type="orders", resource_id="1",
-                     created_at=datetime.now(UTC)),
-            AuditLog(id="2", actor="a", action="http_delete",
-                     resource_type="orders", resource_id="2",
-                     created_at=datetime.now(UTC)),
+            AuditLog(
+                id="1",
+                actor="a",
+                action="http_post",
+                resource_type="orders",
+                resource_id="1",
+                created_at=datetime.now(UTC),
+            ),
+            AuditLog(
+                id="2",
+                actor="a",
+                action="http_delete",
+                resource_type="orders",
+                resource_id="2",
+                created_at=datetime.now(UTC),
+            ),
         ]
         summary = rules.summarize(logs)
         assert summary["total"] == 2
@@ -48,17 +58,16 @@ class TestAuditService:
     def test_record(self) -> None:
         repo = _repo()
         svc = AuditService(repository=repo)
-        log = svc.record(actor="u1", action="create",
-                         resource_type="po", resource_id="9",
-                         details={"k": "v"})
+        log = svc.record(
+            actor="u1", action="create", resource_type="po", resource_id="9", details={"k": "v"}
+        )
         assert log.id and log.actor == "u1"
         repo.save.assert_called_once()
 
     def test_record_http(self) -> None:
         repo = _repo()
         svc = AuditService(repository=repo)
-        log = svc.record_http(method="POST", path="/api/orders/9",
-                              status_code=201, actor="u1")
+        log = svc.record_http(method="POST", path="/api/orders/9", status_code=201, actor="u1")
         assert log.action == "http_post"
         assert log.resource_type == "orders"
         assert log.resource_id == "9"
@@ -76,8 +85,9 @@ def client() -> TestClient:
     from app.main import app as fastapi_app
     from app.modules.audit.infrastructure.models import AuditLogModel
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
@@ -99,10 +109,16 @@ def client() -> TestClient:
 
 class TestApi:
     def test_record_and_list(self, client: TestClient) -> None:
-        rec = client.post("/audit/record", json={
-            "actor": "u1", "action": "create",
-            "resource_type": "po", "resource_id": "9",
-            "details": {"note": "x"}})
+        rec = client.post(
+            "/audit/record",
+            json={
+                "actor": "u1",
+                "action": "create",
+                "resource_type": "po",
+                "resource_id": "9",
+                "details": {"note": "x"},
+            },
+        )
         assert rec.status_code == 201, rec.text
         assert rec.json()["actor"] == "u1"
 
@@ -111,9 +127,10 @@ class TestApi:
         assert listed.json()["total"] >= 1
 
     def test_summary_and_purge(self, client: TestClient) -> None:
-        client.post("/audit/record", json={
-            "actor": "u1", "action": "http_post",
-            "resource_type": "po", "resource_id": "1"})
+        client.post(
+            "/audit/record",
+            json={"actor": "u1", "action": "http_post", "resource_type": "po", "resource_id": "1"},
+        )
         summary = client.get("/audit/summary")
         assert summary.status_code == 200
         assert summary.json()["total_logged"] >= 1

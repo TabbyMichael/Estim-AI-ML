@@ -7,6 +7,7 @@ Uses python-jose + passlib[bcrypt] per setup.py. Provides:
 - get_current_user dependency + require_roles() RBAC factory
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -41,7 +42,8 @@ def verify_password(plain: str, hashed: str) -> bool:
 def _encode(payload: dict[str, Any], expires: timedelta) -> str:
     now = datetime.now(UTC)
     to_encode = {**payload, "iat": now, "exp": now + expires}
-    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
+    encoded: str = jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
+    return encoded
 
 
 def create_access_token(
@@ -69,7 +71,10 @@ def create_refresh_token(subject: str) -> str:
 def decode_token(token: str) -> dict[str, Any]:
     """Decode and validate a JWT; raises UnauthorizedError on failure."""
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
+        decoded: dict[str, Any] = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.jwt_algorithm]
+        )
+        return decoded
     except JWTError as exc:
         raise UnauthorizedError(f"Invalid token: {exc}") from exc
 
@@ -102,7 +107,7 @@ def get_current_user(
     return CurrentUser(user_id=subject, roles=roles, raw=payload)
 
 
-def require_roles(*allowed: str):
+def require_roles(*allowed: str) -> Callable[..., CurrentUser]:
     """Dependency factory enforcing RBAC roles (Phase 2.3)."""
 
     def _check(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:

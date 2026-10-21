@@ -34,5 +34,4 @@ def project_health(predictions: list[RiskPrediction]) -> str:
 
 
 def overdue_milestones(milestones: list[Milestone]) -> list[Milestone]:
-    return [m for m in milestones
-            if m.status != MilestoneStatus.COMPLETED and m.delay_days() > 0]
+    return [m for m in milestones if m.status != MilestoneStatus.COMPLETED and m.delay_days() > 0]

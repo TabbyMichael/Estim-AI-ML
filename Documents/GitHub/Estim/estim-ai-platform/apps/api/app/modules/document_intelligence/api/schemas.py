@@ -1,7 +1,6 @@
 """Pydantic schemas for document intelligence."""
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -28,10 +27,16 @@ class DocumentResponse(BaseModel):
 
     @classmethod
     def from_entity(cls, d: Document) -> "DocumentResponse":
-        return cls(id=d.id, project_id=d.project_id, filename=d.filename,
-                   storage_key=d.storage_key, content_type=d.content_type,
-                   status=d.status.value, created_by=d.created_by,
-                   created_at=d.created_at)
+        return cls(
+            id=d.id,
+            project_id=d.project_id,
+            filename=d.filename,
+            storage_key=d.storage_key,
+            content_type=d.content_type,
+            status=d.status.value,
+            created_by=d.created_by,
+            created_at=d.created_at,
+        )
 
 
 class DocumentListResponse(BaseModel):
@@ -59,7 +64,7 @@ class SourceHit(BaseModel):
     chunk_id: str
     document_id: str
     score: float
-    text: Optional[str] = None
+    text: str | None = None
 
 
 class AskResponse(BaseModel):

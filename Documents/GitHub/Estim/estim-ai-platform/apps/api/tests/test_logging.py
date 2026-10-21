@@ -6,7 +6,6 @@ import sys
 from unittest.mock import MagicMock, patch
 
 from app.core import logging as estim_logging
-
 from app.core.logging import EstimJsonFormatter, LogstashTCPSocketHandler, setup_logging
 
 

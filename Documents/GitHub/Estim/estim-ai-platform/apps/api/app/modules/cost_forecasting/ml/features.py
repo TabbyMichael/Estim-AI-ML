@@ -25,7 +25,8 @@ def _f(value: Decimal | float | int) -> float:
 
 
 def extract_forecast_features(
-    forecast: CostForecast, snapshots: list[CostSnapshot] | None = None,
+    forecast: CostForecast,
+    snapshots: list[CostSnapshot] | None = None,
 ) -> list[float]:
     """Build the model input vector for one forecast + its history."""
     snapshots = snapshots or []
@@ -49,7 +50,5 @@ class CostFeatureTransformer:
 
     feature_names: list[str] = FEATURE_NAMES
 
-    def transform(
-        self, items: list[tuple[CostForecast, list[CostSnapshot]]]
-    ) -> list[list[float]]:
+    def transform(self, items: list[tuple[CostForecast, list[CostSnapshot]]]) -> list[list[float]]:
         return [extract_forecast_features(f, snaps) for f, snaps in items]

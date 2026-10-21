@@ -27,17 +27,26 @@ from app.modules.inventory.ml.forecasting import (
 
 
 def _snap() -> StockSnapshot:
-    return StockSnapshot(id=str(uuid4()), material_id="MAT-1", site_id="SITE-1",
-                         quantity_on_hand=Decimal("100"),
-                         reorder_point=Decimal("20"))
+    return StockSnapshot(
+        id=str(uuid4()),
+        material_id="MAT-1",
+        site_id="SITE-1",
+        quantity_on_hand=Decimal("100"),
+        reorder_point=Decimal("20"),
+    )
 
 
 def _forecast() -> DemandForecast:
-    return DemandForecast(id=str(uuid4()), material_id="MAT-1", site_id="SITE-1",
-                          forecast_type="monthly", status=ForecastStatus.GENERATED,
-                          predicted_quantity=Decimal("50"),
-                          confidence_low=Decimal("40"),
-                          confidence_high=Decimal("60"))
+    return DemandForecast(
+        id=str(uuid4()),
+        material_id="MAT-1",
+        site_id="SITE-1",
+        forecast_type="monthly",
+        status=ForecastStatus.GENERATED,
+        predicted_quantity=Decimal("50"),
+        confidence_low=Decimal("40"),
+        confidence_high=Decimal("60"),
+    )
 
 
 class TestDomain:
@@ -54,6 +63,7 @@ class TestDomain:
         assert rules.reorder_quantity(_snap(), Decimal("10"), 30) == Decimal("200")
         hist = [Decimal("10"), Decimal("12"), Decimal("20"), Decimal("25")]
         from app.modules.inventory.domain.entities import DemandTrend
+
         assert rules.detect_trend(hist) == DemandTrend.RISING
 
 
@@ -69,6 +79,7 @@ class TestApplication:
 
     def test_create_forecast_no_repo(self) -> None:
         from app.modules.inventory.domain.entities import InvalidStateError
+
         svc = InventoryService(stock=Mock())
         with pytest.raises(InvalidStateError):
             svc.generate_forecast("x")
@@ -96,8 +107,9 @@ def client() -> TestClient:
         StockSnapshotModel,
     )
 
-    engine = create_engine("sqlite:///:memory:", poolclass=StaticPool,
-                           connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite:///:memory:", poolclass=StaticPool, connect_args={"check_same_thread": False}
+    )
 
     @event.listens_for(engine, "connect")
     def _fk_on(dbapi_conn, conn_record):  # type: ignore[no-untyped-def]
@@ -119,22 +131,31 @@ def client() -> TestClient:
 
 class TestApi:
     def test_snapshot_and_forecast_flow(self, client: TestClient) -> None:
-        snap = client.post("/inventory/snapshots", json={
-            "material_id": "MAT-9", "site_id": "SITE-9",
-            "quantity_on_hand": "100.00"})
+        snap = client.post(
+            "/inventory/snapshots",
+            json={"material_id": "MAT-9", "site_id": "SITE-9", "quantity_on_hand": "100.00"},
+        )
         assert snap.status_code == 201, snap.text
-        fc = client.post("/inventory/forecasts", json={
-            "material_id": "MAT-9", "site_id": "SITE-9",
-            "forecast_type": "monthly", "predicted_quantity": "50.00",
-            "confidence_low": "40.00", "confidence_high": "60.00",
-            "created_by": "tester"})
+        fc = client.post(
+            "/inventory/forecasts",
+            json={
+                "material_id": "MAT-9",
+                "site_id": "SITE-9",
+                "forecast_type": "monthly",
+                "predicted_quantity": "50.00",
+                "confidence_low": "40.00",
+                "confidence_high": "60.00",
+                "created_by": "tester",
+            },
+        )
         assert fc.status_code == 201, fc.text
         fid = fc.json()["id"]
         gen = client.post(f"/inventory/forecasts/{fid}/generate")
         assert gen.status_code == 200
-        check = client.get("/inventory/stockout-check", params={
-            "material_id": "MAT-9", "site_id": "SITE-9",
-            "daily_demand": "10.00"})
+        check = client.get(
+            "/inventory/stockout-check",
+            params={"material_id": "MAT-9", "site_id": "SITE-9", "daily_demand": "10.00"},
+        )
         assert check.status_code == 200
         assert check.json()["at_risk"] is True
 
@@ -142,10 +163,9 @@ class TestApi:
 class TestInfra:
     def test_roundtrip(self) -> None:
         from app.modules.inventory.infrastructure import mappers
-        back = mappers.model_to_snapshot(
-            mappers.snapshot_to_model(_snap()))
+
+        back = mappers.model_to_snapshot(mappers.snapshot_to_model(_snap()))
         assert back.material_id == "MAT-1"
-        fback = mappers.model_to_forecast(
-            mappers.forecast_to_model(_forecast()))
+        fback = mappers.model_to_forecast(mappers.forecast_to_model(_forecast()))
         assert fback.status == ForecastStatus.GENERATED
         _ = datetime.now(UTC)

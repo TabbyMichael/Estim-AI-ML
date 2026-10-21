@@ -10,6 +10,13 @@ class UserRepository(Protocol):
     def get_by_email(self, email: str) -> User: ...
     def exists_by_email(self, email: str) -> bool: ...
     def save(self, user: User) -> User: ...
+    def list_users(
+        self,
+        skip: int = 0,
+        limit: int = 50,
+        query: str | None = None,
+        is_active: bool | None = None,
+    ) -> tuple[list[User], int]: ...
 
 
 class RoleRepository(Protocol):

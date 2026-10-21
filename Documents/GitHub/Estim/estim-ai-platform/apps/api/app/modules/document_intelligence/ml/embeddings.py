@@ -20,8 +20,7 @@ class EmbeddingModel:
     model_name: str = MODEL_NAME
     model_version: str = MODEL_VERSION
 
-    def __init__(self, model_version: str = MODEL_VERSION,
-                 dim: int = EMBED_DIM) -> None:
+    def __init__(self, model_version: str = MODEL_VERSION, dim: int = EMBED_DIM) -> None:
         self.model_version = model_version
         self.dim = dim
         self._model: Any = None
@@ -43,11 +42,13 @@ class EmbeddingModel:
         return [self.embed(t) for t in texts]
 
     def health(self) -> dict:
-        return {"model_name": self.model_name,
-                "model_version": self.model_version,
-                "backend": "sentence-transformers" if self._model
-                else "hash-fallback",
-                "ready": True, "dim": self.dim}
+        return {
+            "model_name": self.model_name,
+            "model_version": self.model_version,
+            "backend": "sentence-transformers" if self._model else "hash-fallback",
+            "ready": True,
+            "dim": self.dim,
+        }
 
 
 class LLMClient:
@@ -64,11 +65,11 @@ class LLMClient:
                 return str(self._client.chat(prompt, context))
             except Exception:  # noqa: BLE001
                 pass
-        return (f"[draft answer using {len(context)} chars of context] "
-                f"Q: {prompt[:200]}")
+        return f"[draft answer using {len(context)} chars of context] " f"Q: {prompt[:200]}"
 
 
 def evaluate_retrieval(hits_at_k: list[bool]) -> EvaluationResult:
     acc = sum(1 for h in hits_at_k if h) / len(hits_at_k) if hits_at_k else 0.0
-    return EvaluationResult(model_name=MODEL_NAME, model_version=MODEL_VERSION,
-                            metrics={"hit_rate": acc})
+    return EvaluationResult(
+        model_name=MODEL_NAME, model_version=MODEL_VERSION, metrics={"hit_rate": acc}
+    )

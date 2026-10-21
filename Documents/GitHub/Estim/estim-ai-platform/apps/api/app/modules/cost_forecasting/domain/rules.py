@@ -78,10 +78,7 @@ def is_duplicate_forecast(
     Returns:
         True if duplicate forecast exists, False otherwise
     """
-    return any(
-        f.project_id == project_id and f.forecast_type == forecast_type
-        for f in existing
-    )
+    return any(f.project_id == project_id and f.forecast_type == forecast_type for f in existing)
 
 
 def calculate_variance(predicted: Decimal, actual: Decimal) -> Decimal:
@@ -113,9 +110,7 @@ def calculate_accuracy(predicted: Decimal, actual: Decimal) -> float:
     return max(0.0, float(1 - variance / predicted))
 
 
-def is_forecast_stale(
-    forecast: CostForecast, max_age_hours: int = 168
-) -> bool:
+def is_forecast_stale(forecast: CostForecast, max_age_hours: int = 168) -> bool:
     """Check if a forecast is stale based on creation time.
 
     Args:
@@ -146,9 +141,7 @@ def get_forecast_priority(forecast: CostForecast) -> str:
         return "low"
 
 
-def is_within_tolerance(
-    predicted: Decimal, actual: Decimal, tolerance: Decimal
-) -> bool:
+def is_within_tolerance(predicted: Decimal, actual: Decimal, tolerance: Decimal) -> bool:
     """Check if actual amount is within tolerance of predicted.
 
     Args:

@@ -9,6 +9,7 @@ Setup:
   3. `get_tracer()` returns a tracer for custom spans in business logic
 """
 
+from fastapi import FastAPI
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.resources import Resource
@@ -31,7 +32,7 @@ def setup_tracing(service_name: str = "estim-api") -> None:
     # Clear any existing provider to allow reconfiguration
     existing = trace.get_tracer_provider()
     if isinstance(existing, TracerProvider):
-        trace.set_tracer_provider(None)
+        trace.set_tracer_provider(None)  # type: ignore[arg-type]
 
     resource = Resource.create(
         {
@@ -53,12 +54,13 @@ def setup_tracing(service_name: str = "estim-api") -> None:
     trace.set_tracer_provider(provider)
     _tracer_provider_configured = True
 
+
 def get_tracer(name: str = "estim") -> trace.Tracer:
     """Return a tracer for creating custom spans in business logic."""
     return trace.get_tracer(name)
 
 
-def instrument_fastapi(app) -> None:
+def instrument_fastapi(app: FastAPI) -> None:
     """Auto-instrument a FastAPI app with OpenTelemetry HTTP tracing."""
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 

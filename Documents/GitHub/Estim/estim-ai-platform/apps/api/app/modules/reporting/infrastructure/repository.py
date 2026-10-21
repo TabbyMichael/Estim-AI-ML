@@ -29,11 +29,18 @@ def _tz(v: datetime | None) -> datetime | None:
 
 def report_to_model(r: Report) -> ReportModel:
     return ReportModel(
-        id=uuid.UUID(r.id), report_type=r.report_type, title=r.title,
-        status=r.status.value, format=r.format.value,
-        payload_json=json.dumps(r.payload, default=str), content=r.content,
-        generated_by=r.generated_by, created_at=r.created_at,
-        completed_at=r.completed_at, error=r.error)
+        id=uuid.UUID(r.id),
+        report_type=r.report_type,
+        title=r.title,
+        status=r.status.value,
+        format=r.format.value,
+        payload_json=json.dumps(r.payload, default=str),
+        content=r.content,
+        generated_by=r.generated_by,
+        created_at=r.created_at,
+        completed_at=r.completed_at,
+        error=r.error,
+    )
 
 
 def model_to_report(m: ReportModel) -> Report:
@@ -41,26 +48,46 @@ def model_to_report(m: ReportModel) -> Report:
     assert created is not None
     payload: dict[str, Any] = json.loads(m.payload_json or "{}")
     return Report(
-        id=str(m.id), report_type=m.report_type, title=m.title,
-        status=ReportStatus(m.status), format=ReportFormat(m.format),
-        payload=payload, content=m.content, generated_by=m.generated_by,
-        created_at=created, completed_at=_tz(m.completed_at), error=m.error)
+        id=str(m.id),
+        report_type=m.report_type,
+        title=m.title,
+        status=ReportStatus(m.status),
+        format=ReportFormat(m.format),
+        payload=payload,
+        content=m.content,
+        generated_by=m.generated_by,
+        created_at=created,
+        completed_at=_tz(m.completed_at),
+        error=m.error,
+    )
 
 
 def schedule_to_model(s: ReportSchedule) -> ReportScheduleModel:
     return ReportScheduleModel(
-        id=uuid.UUID(s.id), report_type=s.report_type, interval=s.interval,
-        enabled=s.enabled, created_by=s.created_by, created_at=s.created_at,
-        last_run_at=s.last_run_at, next_run_at=s.next_run_at)
+        id=uuid.UUID(s.id),
+        report_type=s.report_type,
+        interval=s.interval,
+        enabled=s.enabled,
+        created_by=s.created_by,
+        created_at=s.created_at,
+        last_run_at=s.last_run_at,
+        next_run_at=s.next_run_at,
+    )
 
 
 def model_to_schedule(m: ReportScheduleModel) -> ReportSchedule:
     created = _tz(m.created_at)
     assert created is not None
     return ReportSchedule(
-        id=str(m.id), report_type=m.report_type, interval=m.interval,
-        enabled=m.enabled, created_by=m.created_by, created_at=created,
-        last_run_at=_tz(m.last_run_at), next_run_at=_tz(m.next_run_at))
+        id=str(m.id),
+        report_type=m.report_type,
+        interval=m.interval,
+        enabled=m.enabled,
+        created_by=m.created_by,
+        created_at=created,
+        last_run_at=_tz(m.last_run_at),
+        next_run_at=_tz(m.next_run_at),
+    )
 
 
 class SqlAlchemyReportRepository:
