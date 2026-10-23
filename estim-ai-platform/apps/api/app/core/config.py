@@ -1,6 +1,10 @@
 """Application configuration and environment variables."""
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import json
+from typing import Annotated
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -29,7 +33,26 @@ class Settings(BaseSettings):
     jwt_refresh_expire_days: int = 7
 
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+    # `NoDecode` turns off pydantic-settings' JSON-only parsing for complex
+    # types: every deployment manifest (compose files, k8s configmap) documents
+    # CORS_ORIGINS as a comma-separated list, normalised by the validator below.
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+    ]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, value: object) -> object:
+        """Accept both a JSON array and a comma-separated string."""
+        if not isinstance(value, str):
+            return value
+        value = value.strip()
+        if not value:
+            return []
+        if value.startswith("["):
+            return json.loads(value)
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
 
     # Odoo Integration
     odoo_url: str = ""

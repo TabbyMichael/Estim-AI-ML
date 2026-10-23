@@ -1,5 +1,8 @@
 global:
-  slack_api_url: "${SLACK_WEBHOOK_URL:-}"
+  # Alertmanager v0.27 validates this field before expanding variables, so an
+  # unset ${SLACK_WEBHOOK_URL} fails the whole config. Keep a syntactically
+  # valid placeholder and substitute the real webhook per environment.
+  slack_api_url: "https://hooks.slack.com/services/placeholder"
 
 route:
   receiver: slack-notifications
@@ -12,7 +15,7 @@ receivers:
   - name: slack-notifications
     slack_configs:
       - channel: "#estim-alerts"
-        api_url: "${SLACK_WEBHOOK_URL:-}"
+        api_url: "https://hooks.slack.com/services/placeholder"
         title: |-
           [{{ .Status }}] {{ .Alertname }} on {{ .CommonLabels.provider }}
         text: |
@@ -43,6 +46,3 @@ receivers:
         send_resolved: true
         description: |-
           {{ .CommonAnnotations.description | default .CommonLabels.description }}
-
-templates:
-  - "/etc/alertmanager/templates/*.tmpl"

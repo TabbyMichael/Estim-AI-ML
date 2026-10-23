@@ -4,6 +4,13 @@ x-common-env: &common-env
   CELERY_BROKER_URL: redis://redis:6379/1
   CELERY_RESULT_BACKEND: redis://redis:6379/2
   MLFLOW_TRACKING_URI: http://mlflow:5000
+  # Tracing defaults to localhost, which is the API container itself.
+  JAEGER_HOST: jaeger
+  JAEGER_PORT: 6831
+  # JSON logs are shipped to Logstash when a host is configured; 5000 is the
+  # in-network port of the tcp input declared in logstash.conf.
+  LOGSTASH_HOST: logstash
+  LOGSTASH_PORT: 5000
   S3_ENDPOINT: http://minio:9000
   ENVIRONMENT: development
 
@@ -17,7 +24,7 @@ services:
       POSTGRES_PASSWORD: estim
       POSTGRES_DB: estim_ai
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -51,7 +58,7 @@ services:
     environment:
       <<: *common-env
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,11 +72,15 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      args:
+        # Next.js inlines NEXT_PUBLIC_* at build time, so the value must be a
+        # build arg; setting it only at runtime has no effect on the bundle.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     container_name: estim-web
     ports:
-      - "3001:3000"
+      - "${WEB_PORT:-3000}:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     depends_on:
       - estim-api
 
@@ -120,7 +131,7 @@ services:
       AWS_SECRET_ACCESS_KEY: estimadmin123
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
     ports:
-      - "5000:5000"
+      - "${MLFLOW_PORT:-5000}:5000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,7 +144,7 @@ services:
     image: prom/prometheus:v2.52.0
     container_name: estim-prometheus
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./infrastructure/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
@@ -144,7 +155,7 @@ services:
     image: grafana/grafana:10.4.0
     container_name: estim-grafana
     ports:
-      - "3001:3000"
+      - "${GRAFANA_PORT:-3001}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: estimadmin
@@ -156,14 +167,14 @@ services:
     depends_on:
       - prometheus
 
-  # Log aggregation (ELK stack)
+  # Log aggregation (Elasticsearch + Logstash + Kibana)
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
     container_name: estim-elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms${ES_HEAP:-1g} -Xmx${ES_HEAP:-1g}"
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -179,8 +190,8 @@ services:
     image: docker.elastic.co/logstash/logstash:8.12.0
     container_name: estim-logstash
     ports:
-      - "5000:5000/tcp"
-      - "5000:5000/udp"
+      - "${LOGSTASH_PORT:-5044}:5000/tcp"
+      - "${LOGSTASH_PORT:-5044}:5000/udp"
       - "9600:9600"
     volumes:
       - ./infrastructure/logging/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
